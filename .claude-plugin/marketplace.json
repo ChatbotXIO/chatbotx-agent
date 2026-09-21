@@ -14,7 +14,7 @@
       "description": "ChatbotX CLI and MCP workflows for contacts, conversations, flows, broadcasts, sequences, analytics, and omnichannel messaging.",
       "source": "./",
       "strict": false,
-      "skills": ["./skills/chatbotx-cli", "./skills/chatbotx-mcp"]
+      "skills": ["./skills/chatbotx", "./skills/chatbotx-mcp"]
     }
   ]
 }

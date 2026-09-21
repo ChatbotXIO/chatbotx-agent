@@ -1,8 +1,9 @@
 ---
-name: chatbotx-cli
+name: chatbotx
 description: Manage contacts, conversations, broadcasts, flows, sequences, appointments, minigames, and every other ChatbotX workspace resource from the command line.
+allowed-tools: Bash(chatbotx:*)
 version: 1.0.0
-homepage: https://github.com/ChatbotXIO/chatbotx-agent/tree/main/skills/chatbotx-cli
+homepage: https://github.com/ChatbotXIO/chatbotx-agent/tree/main/skills/chatbotx
 emoji: "🤖"
 metadata:
   openclaw:
@@ -30,17 +31,34 @@ metadata:
         bins: [chatbotx]
 ---
 
-# ChatbotX CLI
+# ChatbotX
 
-Command-line client for the ChatbotX workspace API — contacts, conversations, broadcasts, flows,
-sequences, appointments, minigames, analytics, and every other workspace resource, callable from a
-terminal or an AI agent. Commands are generated at runtime from the ChatbotX OpenAPI spec, so the
-surface below tracks whatever the connected workspace's API actually exposes.
+Use the `chatbotx` CLI to manage a ChatbotX workspace: contacts, conversations, broadcasts, flows,
+sequences, appointments, minigames, analytics, and the rest of the workspace API. Commands are
+generated at runtime from the connected workspace's OpenAPI spec, so `--help` on the live CLI is
+the authoritative reference and this document can lag behind it.
+
+## Rules for agents
+
+1. Confirm credentials and workspace scope before anything else. Run `chatbotx token list`. A `401`
+   means the user must set `CHATBOTX_API_KEY` and `CHATBOTX_API_URL`, or run
+   `chatbotx config set --apiKey <key> --apiUrl <url>`. Do not run any other command until this
+   returns a workspace, permission, and scope payload.
+2. Discover before mutating. Run `chatbotx capabilities list` and the relevant `list` or `get`
+   command to resolve names, ids, permissions, and current state before any write. Run
+   `<command> --help` when the exact flags are unknown.
+3. Messages, broadcasts, bulk operations, deletes, and flow publishing reach real customers.
+   Confirm the exact recipients, filters, payloads, and schedules. There is no dry-run flag, so
+   count the audience first with `contacts count --contactFilter <filter>` or
+   `broadcasts audience list`.
+4. Verify every write with the matching `get` or `list` command. An exit code of `0` is not proof:
+   a command affected by a name collision (see below) can do nothing and still exit `0`.
+5. Never expose API keys, saved config, or unredacted contact data in responses.
+   `~/.chatbotX/config.json` holds plaintext credentials. Treat it as a secret file.
 
 ## Setup
 
-Requires Node.js ≥ 24. Documented against `chatbotx` ≥ 1.8 (the connected workspace's live
-OpenAPI spec is always the source of truth for available commands, not this document's version).
+Requires Node.js 24 or newer. Documented against `chatbotx` 1.8 or newer.
 
 ```bash
 npm install -g chatbotx
@@ -57,18 +75,26 @@ export CHATBOTX_API_URL="https://app.chatbotx.io/api"
 chatbotx config set --allowSelfSignedCert true
 ```
 
-Global options available on every command: `--apiKey`, `--apiUrl`, `--allowSelfSignedCert` (each
-overrides the saved config for one run), and `--refresh-spec` (force re-fetch the OpenAPI spec,
-clearing the 1-hour cache at `~/.chatbotX/openapi-cache.json`).
+Global options work on every command. `--apiKey`, `--apiUrl`, and `--allowSelfSignedCert` each
+override the saved config for one run. `--refresh-spec` re-fetches the OpenAPI spec and clears the
+1-hour cache at `~/.chatbotX/openapi-cache.json`. Use it, or set `CHATBOTX_SPEC_CACHE_TTL_SECONDS`,
+when a command is missing after a workspace API upgrade.
 
-## Output format
+## Output and errors
 
-All commands print JSON by default (safe to pipe into `jq`). Add `--pretty` for indented output.
-Errors always come back as `{"error": true, "message": "...", "status": <httpStatus>}` —
-`401` invalid/missing key, `402` add-on required, `403` plan limit or permission, `404` not found,
-`429` rate limited.
+Every command prints JSON, so output can be piped into `jq`. Add `--pretty` for indented output.
+Errors come back as `{"error": true, "message": "...", "status": <httpStatus>}`. Branch on
+`status`, not on `message`.
 
-## Core workflow
+| Status | Meaning |
+|---|---|
+| `401` | Invalid or missing API key |
+| `402` | Add-on required |
+| `403` | Plan limit or missing permission |
+| `404` | Not found |
+| `429` | Rate limited |
+
+## Workflow
 
 ```bash
 # 1. Discover what a workspace token can see
@@ -87,7 +113,22 @@ chatbotx contacts message send email:jane@example.com --text "Hi Jane!" --inboxI
 chatbotx contacts messages list email:jane@example.com --perPage 5
 ```
 
-Getting help at any depth:
+The same shape applies to broadcasts and flows:
+
+```bash
+# Broadcasts: count the audience, create, verify, stop if needed
+chatbotx contacts count --contactFilter <filter>
+chatbotx broadcasts create --channel <channel> --subaction <subaction> \
+  --schedulesType <schedulesType> --schedulesAt <schedulesAt> --contactFilter <filter>
+chatbotx broadcasts get <idOrName>
+chatbotx broadcasts stop add <id>
+
+# Flows: validate the spec, then publish
+chatbotx flows validate --spec <spec>
+chatbotx flows publish add <id> --spec <spec>
+```
+
+Help is available at every depth:
 
 ```bash
 chatbotx --help                          # every command group
@@ -98,8 +139,8 @@ chatbotx contacts message send --help    # options for one action
 
 ## Contact identifiers
 
-Everywhere `<identifier>` appears below it must be prefixed — a bare value throws
-`404 Invalid identifier format`:
+Wherever `<identifier>` appears below, the value must carry a prefix. A bare value returns
+`404 Invalid identifier format`.
 
 | Format | Example | Lookup by |
 |---|---|---|
@@ -109,7 +150,7 @@ Everywhere `<identifier>` appears below it must be prefixed — a bare value thr
 
 ## Command groups
 
-Every group supports `--help` for its exact flags; the highest-traffic ones are expanded below.
+Every group supports `--help` for its exact flags. The most used groups are expanded below.
 
 ### Contacts
 
@@ -179,7 +220,7 @@ chatbotx broadcasts duplicate add <id>
 chatbotx broadcasts delete <id>                         # fails while status is sending
 ```
 
-### Flows & automation
+### Flows and automation
 
 ```bash
 chatbotx flows list                                     # [--page --perPage --active]  active defaults true
@@ -200,7 +241,7 @@ chatbotx webhooks list / create / delete
 chatbotx external-webhooks list / create / delete            # [--provider make|n8n]
 ```
 
-### Team & workspace admin
+### Team and workspace admin
 
 ```bash
 chatbotx members list / get
@@ -216,7 +257,9 @@ chatbotx capabilities list                                     # [--include] dis
 chatbotx token list                                             # calling token's workspace/permission/scopes
 ```
 
-### Analytics (time-range: `--from --to --timezone`, some also `--granularity`)
+### Analytics
+
+Time-range commands take `--from --to --timezone`. Some also take `--granularity`.
 
 ```bash
 chatbotx analytics contact-counts-per-day
@@ -239,7 +282,7 @@ chatbotx ai-functions list / get / create / update / delete
 chatbotx ai-mcp-servers list / get / create / update / delete
 ```
 
-### Commerce & engagement
+### Commerce and engagement
 
 ```bash
 chatbotx products list / get / create / update / delete
@@ -258,7 +301,7 @@ chatbotx ref-links list / get / create / update / delete
 chatbotx qr-codes list / get / create / update / delete
 ```
 
-### Integrations & channels
+### Integrations and channels
 
 ```bash
 chatbotx integrations list / get
@@ -285,12 +328,12 @@ chatbotx media-library files-move --fileIds <fileIds>       # [--folderId]
 ### Ads
 
 ```bash
-chatbotx ads conversion-rules                              # list rules; create via same command, see caveats below
+chatbotx ads conversion-rules                              # list rules; create via same command, see collisions below
 chatbotx ads funnel / funnel-timeseries / analytics-overview / analytics-timeseries
 chatbotx ads capi-delivery
 chatbotx ads conversions-export                             # [--allChannels]
 chatbotx ads ad-accounts list <channel>
-chatbotx ads campaigns                                       # list/create messaging ad campaigns, see caveats below
+chatbotx ads campaigns                                       # list/create messaging ad campaigns, see collisions below
 chatbotx ads campaigns-publish <id> / campaigns-pause <id> / campaigns-retry <id>
 chatbotx ads campaigns-insights                               # POST, adIds up to 500
 ```
@@ -303,44 +346,42 @@ chatbotx appointment-external-calendars list / delete <integrationId>
 chatbotx appointment-reminders list
 ```
 
-## Known command-name collisions — read before guessing a command
+## Command-name collisions
 
-Commands are derived from `{path, method}` alone. When two API operations under the same resource
-reduce to the same generated name, the CLI keeps the first and silently drops the second
-(a `Warning: duplicate command name "..." — skipping` on stderr, but exit code 0). Verified cases:
+Command names are derived from the API path and method alone. When two operations under one
+resource reduce to the same name, the CLI registers the first and skips the second. It prints
+`Warning: duplicate command name "..." — skipping` on stderr but still exits `0`. Verified cases:
 
-- `bot-fields update <idOrName> --value <value>` (single field) is **not reachable** — only
-  `bot-fields update --fields <fields>` (batch, by id or name) works.
-- `contacts custom-field update <identifier> <idOrName> --value <value>` (single field PUT) is
-  **not reachable** — use `contacts custom-fields update <identifier> --operations '[{"customFieldId":"...","operation":"set","value":"..."}]'`
+- `bot-fields update <idOrName> --value <value>` (single field) is unreachable. Use
+  `bot-fields update --fields <fields>`, which updates by id or name in batch.
+- `contacts custom-field update <identifier> <idOrName> --value <value>` (single-field PUT) is
+  unreachable. Use `contacts custom-fields update <identifier> --operations '[{"customFieldId":"...","operation":"set","value":"..."}]'`
   for a single field too.
-- `contacts custom-field delete <identifier>` clears **every** custom field on the contact, not
-  one — the per-field delete has no CLI command.
-- `integrations find-by-ai --provider <provider>` is GET-only — connecting/disconnecting an AI
-  provider integration has no CLI command; use the API directly.
-- `ads conversion-rules` / `ads campaigns` / `media-library folders` / `media-library files` each
-  collapse list (GET) and create (POST) onto one command name — only the first-registered
-  operation is reachable via the CLI.
-- `analytics flows-stats <flowId>` — GET (fetch) wins; the DELETE (reset stats) variant has no
-  CLI command.
-- `minigames update <id>` — only one of PUT (full replace) / PATCH (partial) is reachable.
+- `contacts custom-field delete <identifier>` clears every custom field on the contact, not one.
+  The per-field delete has no CLI command.
+- `integrations find-by-ai --provider <provider>` is GET only. Connecting or disconnecting an AI
+  provider has no CLI command; use the API directly.
+- `ads conversion-rules`, `ads campaigns`, `media-library folders`, and `media-library files` each
+  collapse list (GET) and create (POST) onto one name. Only the first-registered operation is
+  reachable.
+- `analytics flows-stats <flowId>`: GET (fetch) wins. The DELETE (reset stats) variant has no CLI
+  command.
+- `minigames update <id>`: only one of PUT (full replace) and PATCH (partial) is reachable.
 
-When a documented action 404s or silently no-ops, assume a collision and fall back to the
-workspace's REST API directly rather than guessing at flag combinations.
+When a documented action returns `404` or silently does nothing, assume a collision and call the
+workspace REST API directly instead of trying other flag combinations.
 
-## Tips for AI agents
+## Notes
 
-- Run `chatbotx capabilities list` and `chatbotx token list` first to confirm what the configured
-  API key can actually see before attempting writes.
-- Resolve names to ids before mutating: `contacts list --keyword`, `tags list`, `inboxes list`,
-  `teams list` all return the ids every write command expects.
-- `contacts`/`conversations` message-send accepts either `--flowId` or free text (`--text`), not
-  both semantics at once — check `--help` before sending.
-- `broadcasts create` needs exactly one of `--flowId` or `--templateId`, and `--schedulesAt` only
-  when `--schedulesType future` and not saving as a draft.
-- Prefer `--contactFilter`/`filter-fields` over client-side filtering — `chatbotx contacts
-  filter-fields` documents every supported field/operator for server-side filtering.
-- The spec is cached for 1 hour at `~/.chatbotX/openapi-cache.json`; pass `--refresh-spec` (or set
-  `CHATBOTX_SPEC_CACHE_TTL_SECONDS`) after a workspace API upgrade if a new command is missing.
-- Every command returns JSON on success and `{"error": true, "message", "status"}` on failure —
-  parse `status`, don't string-match `message`.
+- `contacts message send` and `conversations message send` accept either `--flowId` or free text
+  with `--text`. Check `--help` before sending.
+- `broadcasts create` needs exactly one of `--flowId` or `--templateId`. `--schedulesAt` is
+  required only when `--schedulesType future` and the broadcast is not saved as a draft.
+- Filter on the server with `--contactFilter` instead of filtering results client side.
+  `chatbotx contacts filter-fields` documents every supported field and operator.
+
+## MCP alternative
+
+Agents in MCP-capable IDEs can use the `chatbotx-mcp` server instead of the CLI. It exposes the
+same workspace API as MCP tools, filtered by the token's scopes. Setup and the default tool list
+are in `skills/chatbotx-mcp/SKILL.md` of this repository.

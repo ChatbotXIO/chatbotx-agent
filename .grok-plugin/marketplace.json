@@ -24,7 +24,7 @@
       "category": "productivity",
       "tags": ["chatbot", "messaging", "automation", "mcp", "ai-agent"],
       "keywords": ["chatbotx", "omnichannel", "whatsapp", "messenger", "zalo", "telegram", "cli", "mcp"],
-      "skills": ["./skills/chatbotx-cli", "./skills/chatbotx-mcp"],
+      "skills": ["./skills/chatbotx", "./skills/chatbotx-mcp"],
       "mcpServers": "./.grok-plugin/mcp.json"
     }
   ]

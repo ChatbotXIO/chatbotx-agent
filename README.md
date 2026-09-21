@@ -6,22 +6,34 @@
 
 Agent-facing distribution for ChatbotX. This repository publishes only two public skills and the IDE/ADE plugin manifests needed to connect AI agents to ChatbotX:
 
-- `chatbotx-cli` — use the `chatbotx` CLI from an agent terminal.
+- `chatbotx` — use the `chatbotx` CLI from an agent terminal.
 - `chatbotx-mcp` — use ChatbotX MCP tools from MCP-capable agents and IDEs.
 
 The ChatbotX product source stays in [`ChatbotXIO/ChatbotX`](https://github.com/ChatbotXIO/ChatbotX). This repository intentionally excludes internal development skills.
 
 ## Install as skills
 
-```bash
-npx skills add ChatbotXIO/chatbotx-agent --skill chatbotx-cli
-npx skills add ChatbotXIO/chatbotx-agent --skill chatbotx-mcp
+The repository root carries a `SKILL.md`, so `npx skills add` installs the `chatbotx` CLI skill
+with no further arguments:
 
-# List what this repo publishes
-npx skills add ChatbotXIO/chatbotx-agent --list
+```bash
+npx skills add ChatbotXIO/chatbotx-agent
 ```
 
-Expected list: `chatbotx-cli` and `chatbotx-mcp` only.
+A root `SKILL.md` stops skills.sh from scanning `skills/`, so install the MCP skill by its path or
+with `--full-depth`:
+
+```bash
+npx skills add ChatbotXIO/chatbotx-agent/skills/chatbotx-mcp
+# or
+npx skills add ChatbotXIO/chatbotx-agent --full-depth --skill chatbotx-mcp
+
+# List everything this repo publishes
+npx skills add ChatbotXIO/chatbotx-agent --full-depth --list
+```
+
+Expected list with `--full-depth`: `chatbotx` and `chatbotx-mcp` only. The root `SKILL.md` is a
+copy of `skills/chatbotx/SKILL.md`; keep the two files identical when editing either one.
 
 ## Claude Code plugin
 
@@ -87,10 +99,10 @@ No separate publish command is required. Push this public repository and install
 ### ClawHub
 
 ```bash
-clawhub skill publish skills/chatbotx-cli --version 1.0.0 --dry-run --json
+clawhub skill publish skills/chatbotx --version 1.0.0 --dry-run --json
 clawhub skill publish skills/chatbotx-mcp --version 1.0.0 --dry-run --json
 
-clawhub skill publish skills/chatbotx-cli --version 1.0.0 --changelog "Initial ChatbotX CLI skill"
+clawhub skill publish skills/chatbotx --version 1.0.0 --changelog "Initial ChatbotX CLI skill"
 clawhub skill publish skills/chatbotx-mcp --version 1.0.0 --changelog "Initial ChatbotX MCP skill"
 ```
 
