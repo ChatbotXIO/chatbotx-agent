@@ -25,12 +25,13 @@ metadata:
 
 # ChatbotX MCP
 
-Use the official ChatbotX MCP server to give AI agents direct tool access to a ChatbotX workspace.
-Tools are generated from the connected workspace's OpenAPI spec and filtered by the workspace token's scopes.
+Use the official ChatbotX MCP server to give AI agents tool access to a ChatbotX workspace.
+Tools are generated from the connected workspace's OpenAPI spec and filtered by the workspace
+token's scopes.
 
 ## Setup
 
-Requires Node.js ≥ 18 and a ChatbotX workspace token from **Settings → Developer → API Keys**.
+Requires Node.js 18 or newer and a ChatbotX workspace token from Settings → Developer → API Keys.
 
 For MCP clients that support stdio servers:
 
@@ -65,17 +66,20 @@ For a self-hosted or local instance with a trusted self-signed certificate:
 export CHATBOTX_ALLOW_SELF_SIGNED_CERT=true
 ```
 
-## Core workflow
+## Workflow
 
-1. **Authenticate** — configure `CHATBOTX_API_KEY` and `CHATBOTX_API_URL`.
-2. **Discover capabilities** — call `capabilities_get` first to resolve inboxes, templates, fields, tags, flows, and sequences.
-3. **Check token scopes** — call `token_get` before any write.
-4. **Resolve IDs** — most writes require IDs, not display names.
-5. **Act** — use default tools for common operations.
-6. **Search when needed** — use `search_tools` then `call_tool` for tools outside the curated default list.
-7. **Verify writes** — follow a mutation with the relevant `get`, `list`, or message-history tool.
+1. Set `CHATBOTX_API_KEY` and `CHATBOTX_API_URL`.
+2. Call `capabilities_get` to resolve inboxes, templates, fields, tags, flows, and sequences.
+3. Call `token_get` before any write to check the token's permission and scopes.
+4. Resolve ids. Most writes take ids, not display names.
+5. Use the default tools for common operations.
+6. For anything outside the default set, find the tool with `search_tools` and run it with
+   `call_tool`.
+7. Verify each write with the matching `get`, `list`, or message-history tool.
 
-## Discovery tools agents should call first
+## Discovery tools
+
+Call these before anything else.
 
 | Tool | Description |
 |---|---|
@@ -85,7 +89,7 @@ export CHATBOTX_ALLOW_SELF_SIGNED_CERT=true
 
 ## Default tools
 
-`tools/list` returns a curated default set plus two meta-tools instead of exposing the entire API at once.
+`tools/list` returns a curated default set plus two meta-tools rather than the whole API.
 
 | Tool | Description |
 |---|---|
@@ -108,28 +112,39 @@ Current default categories:
 | Messages | `messages_list` |
 | Sequences | `sequences_list`, `sequences_get`, `sequences_update` |
 
-Everything else — deletes, less-common resources, coupons, products, webhooks, saved replies, tags/triggers/inboxes/custom-fields management, integrations, workspace members, and other non-default operations — is reachable through `search_tools` → `call_tool` when the workspace token is authorized.
+Everything else is reachable through `search_tools` and `call_tool` when the workspace token is
+authorized: deletes, coupons, products, webhooks, saved replies, tag/trigger/inbox/custom-field
+management, integrations, workspace members, and other less common operations.
 
 ## Scope and read-only behavior
 
 - A token missing a scope does not see that scope's tools in `tools/list`.
 - A `read_only` token only sees read-only default tools.
 - `capabilities_get` and `token_get` are always visible so the agent can discover what it can do.
-- `search_tools` can find tools that are not in `tools/list`, but the underlying API still returns `403` when the token is not authorized.
-- If token introspection has a transient network failure, filtering may fail open in `tools/list`; the API call still enforces real permissions.
+- `search_tools` can find tools that are not in `tools/list`, but the API still returns `403` when
+  the token is not authorized.
+- If token introspection hits a transient network failure, filtering may fail open in `tools/list`.
+  The API call still enforces the real permissions.
 
 ## Safety rules
 
-1. Never send a contact message, conversation message, flow, sequence, or broadcast until the target contact/audience/inbox has been explicitly resolved.
+1. Do not send a contact message, conversation message, flow, sequence, or broadcast until the
+   target contact, audience, and inbox have been resolved to exact ids.
 2. Prefer read-only tokens for discovery and analytics tasks.
-3. For broadcasts, inspect the audience first and keep drafts/manual review when the task affects real customers.
-4. For flows, call `schemas_flow_spec` and `flows_validate` before publishing a generated flow spec.
-5. For destructive operations found through `search_tools`, fetch the current resource first and verify the exact ID.
+3. For broadcasts, inspect the audience first. Keep drafts and manual review when the task affects
+   real customers.
+4. For flows, call `schemas_flow_spec` and `flows_validate` before publishing a generated spec.
+5. For destructive operations found through `search_tools`, fetch the current resource first and
+   verify the exact id.
 6. Do not put workspace tokens in prompts, logs, generated docs, or committed config.
 
 ## Troubleshooting
 
-- Missing tools: call `token_get` to check scopes and permission, then refresh the MCP client so `tools/list` runs again.
-- New API is not visible: the server refreshes the OpenAPI spec after `CHATBOTX_SPEC_TTL_MS` (default 5 minutes); restart the MCP server to force a clean load.
-- Auth errors: verify `CHATBOTX_API_KEY` and ensure `CHATBOTX_API_URL` includes the `/api` path prefix.
-- Local TLS errors: only for trusted local/self-hosted instances, set `CHATBOTX_ALLOW_SELF_SIGNED_CERT=true`.
+- Missing tools: call `token_get` to check scopes and permission, then refresh the MCP client so
+  `tools/list` runs again.
+- New API not visible: the server refreshes the OpenAPI spec after `CHATBOTX_SPEC_TTL_MS` (default
+  5 minutes). Restart the MCP server to force a clean load.
+- Auth errors: verify `CHATBOTX_API_KEY` and make sure `CHATBOTX_API_URL` includes the `/api` path
+  prefix.
+- Local TLS errors: set `CHATBOTX_ALLOW_SELF_SIGNED_CERT=true`, only for trusted local or
+  self-hosted instances.

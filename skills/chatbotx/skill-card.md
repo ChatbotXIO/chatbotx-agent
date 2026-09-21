@@ -54,7 +54,7 @@ Risk: Several commands are workspace-wide and irreversible — `contacts bulk-de
 command-name collision, not one field), `minigames bulk-delete`, `broadcasts delete`. There is no
 dry-run flag.
 Mitigation: Resolve and review exact target ids/filters with the matching `list`/`get` command
-before running a bulk or delete command; consult the "Known command-name collisions" section of
+before running a bulk or delete command; consult the "Command-name collisions" section of
 this skill's `SKILL.md` before relying on a delete-by-id or update-by-id variant.
 
 Risk: Credentials are stored in plaintext at `~/.chatbotX/config.json` (or shell environment

@@ -21,7 +21,7 @@
     "cli"
   ],
   "skills": [
-    "./skills/chatbotx-cli",
+    "./skills/chatbotx",
     "./skills/chatbotx-mcp"
   ],
   "mcpServers": "./.cursor-plugin/mcp.json",
