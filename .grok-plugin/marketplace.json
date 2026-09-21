@@ -1,0 +1,31 @@
+{
+  "name": "chatbotx-agent",
+  "owner": {
+    "name": "ChatbotXIO",
+    "email": "support@chatbotx.io"
+  },
+  "metadata": {
+    "description": "ChatbotX CLI and MCP workflows for AI agents"
+  },
+  "plugins": [
+    {
+      "name": "chatbotx",
+      "source": "./",
+      "version": "1.0.0",
+      "description": "ChatbotX agentic workspace automation via CLI and MCP tools for contacts, conversations, flows, broadcasts, sequences, analytics, and omnichannel messaging.",
+      "author": {
+        "name": "ChatbotXIO",
+        "email": "support@chatbotx.io"
+      },
+      "homepage": "https://chatbotx.io",
+      "repository": "https://github.com/ChatbotXIO/chatbotx-agent",
+      "license": "MIT-0",
+      "logo": "assets/logo.svg",
+      "category": "productivity",
+      "tags": ["chatbot", "messaging", "automation", "mcp", "ai-agent"],
+      "keywords": ["chatbotx", "omnichannel", "whatsapp", "messenger", "zalo", "telegram", "cli", "mcp"],
+      "skills": ["./skills/chatbotx-cli", "./skills/chatbotx-mcp"],
+      "mcpServers": "./.grok-plugin/mcp.json"
+    }
+  ]
+}

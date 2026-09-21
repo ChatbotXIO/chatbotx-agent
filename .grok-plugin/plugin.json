@@ -1,0 +1,28 @@
+{
+  "name": "chatbotx",
+  "version": "1.0.0",
+  "description": "ChatbotX agentic workspace automation. Manage contacts, conversations, flows, broadcasts, sequences, analytics, and omnichannel messaging through CLI and MCP tools.",
+  "author": {
+    "name": "ChatbotXIO",
+    "email": "support@chatbotx.io",
+    "url": "https://chatbotx.io"
+  },
+  "homepage": "https://chatbotx.io",
+  "repository": "https://github.com/ChatbotXIO/chatbotx-agent",
+  "license": "MIT-0",
+  "logo": "assets/logo.svg",
+  "keywords": ["chatbotx", "chatbotx cli", "chatbotx mcp", "omnichannel automation", "ai-agent"],
+  "skills": ["./skills/chatbotx-cli", "./skills/chatbotx-mcp"],
+  "mcpServers": {
+    "chatbotx": {
+      "command": "npx",
+      "args": ["-y", "chatbotx-mcp"],
+      "env": {
+        "CHATBOTX_API_KEY": "${CHATBOTX_API_KEY}",
+        "CHATBOTX_API_URL": "${CHATBOTX_API_URL}",
+        "CHATBOTX_MCP_TRANSPORT": "stdio"
+      },
+      "note": "Starts the official ChatbotX MCP server over stdio. Requires CHATBOTX_API_KEY and CHATBOTX_API_URL."
+    }
+  }
+}

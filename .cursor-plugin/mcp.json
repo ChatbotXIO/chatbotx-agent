@@ -1,0 +1,11 @@
+{
+  "chatbotx": {
+    "command": "npx",
+    "args": ["-y", "chatbotx-mcp"],
+    "env": {
+      "CHATBOTX_API_KEY": "${CHATBOTX_API_KEY}",
+      "CHATBOTX_API_URL": "${CHATBOTX_API_URL}",
+      "CHATBOTX_MCP_TRANSPORT": "stdio"
+    }
+  }
+}
