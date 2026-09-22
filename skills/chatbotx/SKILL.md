@@ -176,16 +176,17 @@ resource reduce to the same name, the CLI registers the first and skips the seco
 
 - `bot-fields update <idOrName> --value <value>` (single field) is unreachable. Use
   `bot-fields update --fields <fields>`, which updates by id or name in batch.
-- `contacts custom-field update <identifier> <idOrName> --value <value>` (single-field PUT) is
+- `contacts custom-fields update <identifier> <idOrName> --value <value>` (single-field PUT) is
   unreachable. Use `contacts custom-fields update <identifier> --operations '[{"customFieldId":"...","operation":"set","value":"..."}]'`
   for a single field too.
 - `contacts custom-field delete <identifier>` clears every custom field on the contact, not one.
   The per-field delete has no CLI command.
 - `integrations find-by-ai --provider <provider>` is GET only. Connecting or disconnecting an AI
   provider has no CLI command; use the API directly.
-- `ads conversion-rules`, `ads campaigns`, `media-library folders`, and `media-library files` each
-  collapse list (GET) and create (POST) onto one name. Only the first-registered operation is
-  reachable.
+- `ads conversion-rules`, `ads find-by-conversion-rules`, `ads campaigns`,
+  `media-library folders`, `media-library find-by-folders`, `media-library files`, and
+  `media-library find-by-files` each have duplicated generated names. Only the first-registered
+  operation is reachable.
 - `analytics flows-stats <flowId>`: GET (fetch) wins. The DELETE (reset stats) variant has no CLI
   command.
 - `minigames update <id>`: only one of PUT (full replace) and PATCH (partial) is reachable.

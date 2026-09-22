@@ -116,7 +116,7 @@ jobs:
           echo "number=${NUMBER}" >> "$GITHUB_OUTPUT"
 
       - name: Open or update the drift issue
-        if: steps.drift.outputs.outcome != '0'
+        if: steps.drift.outputs.outcome == '1' && hashFiles('drift.md') != ''
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -146,5 +146,9 @@ jobs:
             --repo "${GITHUB_REPOSITORY}"
 
       - name: Fail the job when drift was found
-        if: steps.drift.outputs.outcome != '0'
+        if: steps.drift.outputs.outcome == '1'
         run: exit 1
+
+      - name: Fail the job when the checker crashed
+        if: steps.drift.outputs.outcome != '0' && steps.drift.outputs.outcome != '1'
+        run: exit "${{ steps.drift.outputs.outcome }}"

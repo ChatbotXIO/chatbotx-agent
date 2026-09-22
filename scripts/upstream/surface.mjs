@@ -2,8 +2,9 @@
 // Collects the *actual* runtime surface of the published `chatbotx` CLI and
 // the live `chatbotx-mcp` default tool set, so check-drift.mjs can compare it
 // against the hand-written docs in skills/. Ground truth is the published
-// binary + the live OpenAPI spec — never a re-implementation of upstream's
-// command-name derivation logic (that would just be a second place to drift).
+// binary + the live OpenAPI spec. The sole normalization exception is
+// `toSnakeCase`, copied verbatim from upstream so operation IDs can be
+// compared with its documented MCP tool names.
 
 import { execFileSync, spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync, writeFileSync, mkdirSync } from "node:fs";
@@ -155,6 +156,12 @@ export function collectCliSurface({
       return;
     }
     const { stdout, stderr } = runHelp(pathTokens);
+    if (
+      pathTokens.length === 0 &&
+      !stdout.split("\n").some((line) => line.trim() === "Commands:")
+    ) {
+      throw new Error("CLI root help did not include a Commands: block.");
+    }
     for (const m of stderr.matchAll(DUPLICATE_COMMAND_RE)) {
       collisions.add(m[1]);
     }
@@ -184,7 +191,13 @@ export function collectCliSurface({
  * CLI itself failed — that propagates as a script failure rather than being
  * swallowed as empty output.
  */
-export function runNpxHelp({ version, apiUrl, tmpHome, pathTokens }) {
+export function runNpxHelp({
+  version,
+  apiUrl,
+  tmpHome,
+  pathTokens,
+  spawnSyncImpl = spawnSync,
+}) {
   const args = [
     "-y",
     `chatbotx@${version}`,
@@ -195,13 +208,18 @@ export function runNpxHelp({ version, apiUrl, tmpHome, pathTokens }) {
     ...pathTokens,
     "--help",
   ];
-  const result = spawnSync("npx", args, {
+  const result = spawnSyncImpl("npx", args, {
     encoding: "utf8",
     env: { ...process.env, HOME: tmpHome },
     maxBuffer: 16 * 1024 * 1024,
   });
-  if (result.status !== 0 && result.error) {
-    throw result.error;
+  if (result.status !== 0) {
+    const detail = result.error?.message ?? `exit ${result.status ?? "unknown"}`;
+    throw new Error(
+      `npx chatbotx@${version} ${pathTokens.join(" ")} --help failed (${detail}).\n` +
+        `stdout:\n${result.stdout ?? ""}\n` +
+        `stderr:\n${result.stderr ?? ""}`,
+    );
   }
   return { stdout: result.stdout ?? "", stderr: result.stderr ?? "" };
 }
@@ -226,10 +244,23 @@ export function toSnakeCase(str) {
     .replace(/^_|_$/g, "");
 }
 
+function requirePaths(spec) {
+  if (
+    !spec ||
+    typeof spec !== "object" ||
+    !spec.paths ||
+    typeof spec.paths !== "object" ||
+    Array.isArray(spec.paths)
+  ) {
+    throw new Error("OpenAPI spec is missing a paths object.");
+  }
+  return spec.paths;
+}
+
 /** Extract the default-visible MCP tool names from a parsed OpenAPI spec object. */
 export function extractDefaultTools(spec) {
   const tools = [];
-  for (const pathItem of Object.values(spec.paths ?? {})) {
+  for (const pathItem of Object.values(requirePaths(spec))) {
     for (const [method, operation] of Object.entries(pathItem)) {
       if (!HTTP_METHODS.has(method)) {
         continue;
@@ -256,14 +287,18 @@ export async function collectMcpSurface({ specUrl, fetchImpl = fetch }) {
     );
   }
   const spec = await response.json();
+  const paths = requirePaths(spec);
   const defaultTools = extractDefaultTools(spec);
-  const operationCount = Object.values(spec.paths ?? {}).reduce(
+  const operationCount = Object.values(paths).reduce(
     (n, pathItem) =>
       n +
       Object.keys(pathItem).filter((m) => HTTP_METHODS.has(m)).length,
     0,
   );
-  return { specUrl, defaultTools, operationCount, defaultCount: defaultTools.length };
+  if (operationCount === 0) {
+    throw new Error(`OpenAPI spec from ${specUrl} contains no HTTP operations.`);
+  }
+  return { specUrl, defaultTools, operationCount };
 }
 
 // --- npm version resolution -------------------------------------------------
@@ -276,7 +311,7 @@ export function resolveNpmVersion(packageName) {
 
 // --- CLI entrypoint ----------------------------------------------------------
 
-function parseArgs(argv) {
+export function parseArgs(argv) {
   const out = { out: ".upstream/surface.json" };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -289,21 +324,28 @@ function parseArgs(argv) {
   return out;
 }
 
-export async function main(argv = process.argv.slice(2)) {
+export async function main(
+  argv = process.argv.slice(2),
+  {
+    collectCliSurfaceImpl = collectCliSurface,
+    collectMcpSurfaceImpl = collectMcpSurface,
+    resolveNpmVersionImpl = resolveNpmVersion,
+  } = {},
+) {
   const opts = parseArgs(argv);
   const apiUrl = opts.apiUrl ?? "https://app.chatbotx.io/api";
   const specUrl = opts.specUrl ?? `${apiUrl}/public-spec.json`;
 
-  const cliVersion = opts.cliVersion ?? resolveNpmVersion("chatbotx");
-  const mcpVersion = opts.mcpVersion ?? resolveNpmVersion("chatbotx-mcp");
+  const cliVersion = opts.cliVersion ?? resolveNpmVersionImpl("chatbotx");
+  const mcpVersion = opts.mcpVersion ?? resolveNpmVersionImpl("chatbotx-mcp");
 
   const tmpHome = mkdtempSync(join(tmpdir(), "chatbotx-drift-home-"));
   try {
     const runHelp = (pathTokens) =>
       runNpxHelp({ version: cliVersion, apiUrl, tmpHome, pathTokens });
 
-    const cli = collectCliSurface({ version: cliVersion, apiUrl, runHelp });
-    const mcp = await collectMcpSurface({ specUrl });
+    const cli = collectCliSurfaceImpl({ version: cliVersion, apiUrl, runHelp });
+    const mcp = await collectMcpSurfaceImpl({ specUrl });
 
     const surface = {
       collectedAt: new Date().toISOString(),
@@ -314,7 +356,6 @@ export async function main(argv = process.argv.slice(2)) {
         version: mcpVersion,
         defaultTools: mcp.defaultTools,
         operationCount: mcp.operationCount,
-        defaultCount: mcp.defaultCount,
       },
     };
 

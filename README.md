@@ -187,8 +187,8 @@ When the check finds drift, resolve it by:
 
 1. Updating the affected file(s) the report names.
 2. Bumping `upstream.json` (and the `version:` field in the affected skill's `SKILL.md`,
-   `.claude-plugin/plugin.json`, the `.cursor-plugin`/`.grok-plugin` equivalents, and
-   `gemini-extension.json`) to the live npm version.
+   `.claude-plugin/plugin.json`, the `plugins[].version` fields in `.cursor-plugin/marketplace.json`
+   and `.grok-plugin/marketplace.json`, and `gemini-extension.json`) to the live npm version.
 3. Adding a `CHANGELOG.md` entry.
 4. Merging — the next scheduled run closes the drift issue automatically.
 

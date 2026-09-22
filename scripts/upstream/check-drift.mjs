@@ -3,9 +3,9 @@
 // this repo's hand-written docs (skills/chatbotx/references/commands.md,
 // skills/chatbotx/SKILL.md's collision section, skills/chatbotx-mcp/SKILL.md's
 // default-tool table) and against the version pinned in upstream.json.
-// Exits 1 when anything has drifted so CI can act on it.
+// Exits 1 when tracked surface drift is found and 2 when the check cannot run.
 
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { main as collectSurface } from "./surface.mjs";
@@ -93,7 +93,7 @@ export function parseCollisionsDoc(markdown) {
   const heading = "## Command-name collisions";
   const start = markdown.indexOf(heading);
   if (start === -1) {
-    return [];
+    throw new Error(`Missing required heading: ${heading}`);
   }
   const rest = markdown.slice(start + heading.length);
   const nextHeadingIdx = rest.search(/\n## /);
@@ -125,11 +125,7 @@ export function parseCollisionsDoc(markdown) {
       }
       pathTokens.push(t);
     }
-    // A bare colon-form name (e.g. `ads:campaigns`) also appears verbatim
-    // in stderr warnings — accept it directly alongside the space-form.
-    if (pathTokens.length === 1 && pathTokens[0].includes(":")) {
-      found.add(pathTokens[0]);
-    } else if (pathTokens.length >= 2) {
+    if (pathTokens.length >= 2) {
       found.add(pathTokens.join(":"));
     }
   }
@@ -154,9 +150,12 @@ export function parseMcpDefaultTools(markdown) {
   const start = markdown.indexOf(startHeading);
   const end = markdown.indexOf(endHeading);
   if (start === -1) {
-    return [];
+    throw new Error(`Missing required heading: ${startHeading}`);
   }
-  const section = markdown.slice(start, end === -1 ? undefined : end);
+  if (end === -1 || end < start) {
+    throw new Error(`Missing required heading: ${endHeading}`);
+  }
+  const section = markdown.slice(start, end);
 
   // Non-tool snake_case identifiers that appear in backticks within this
   // section's prose/description cells (token permission values, not tool
@@ -193,7 +192,7 @@ function setDiff(upstreamList, docList) {
   const docs = new Set(docList);
   const added = [...upstream].filter((x) => !docs.has(x)).sort();
   const removed = [...docs].filter((x) => !upstream.has(x)).sort();
-  return { added, removed };
+  return { added, removed, changed: added.length > 0 || removed.length > 0 };
 }
 
 export function diffSurface({ surface, docs, pins }) {
@@ -209,16 +208,22 @@ export function diffSurface({ surface, docs, pins }) {
   const collisions = setDiff(surface.cli.collisions, docs.collisions);
   const mcp = setDiff(surface.mcp.defaultTools, docs.mcpDefaultTools);
 
-  const hasDrift =
-    versionsDrifted ||
-    cli.added.length > 0 ||
-    cli.removed.length > 0 ||
-    collisions.added.length > 0 ||
-    collisions.removed.length > 0 ||
-    mcp.added.length > 0 ||
-    mcp.removed.length > 0;
+  // commands.md is intentionally a partial catalog, so newly discovered CLI
+  // commands are informational. A documented command disappearing, collision
+  // changes, and MCP default-tool changes are actionable drift.
+  const surfaceChanged =
+    cli.removed.length > 0 || collisions.changed || mcp.changed;
+  const hasDrift = versionsDrifted || surfaceChanged;
 
-  return { hasDrift, versions, versionsDrifted, cli, collisions, mcp };
+  return {
+    hasDrift,
+    surfaceChanged,
+    versions,
+    versionsDrifted,
+    cli,
+    collisions,
+    mcp,
+  };
 }
 
 // --- report rendering ----------------------------------------------------------
@@ -241,8 +246,14 @@ export function renderReport(diff, { surface }) {
 
   if (!diff.hasDrift) {
     lines.push(
-      "No drift detected. Docs in `skills/` match the live CLI help and MCP default tool set, and `upstream.json` matches npm `latest`.",
+      "No drift detected. Docs in `skills/` match the tracked live CLI/MCP surface, and `upstream.json` matches npm `latest`.",
     );
+    if (diff.cli.added.length > 0) {
+      lines.push("");
+      lines.push("## Informational CLI commands missing from partial docs");
+      lines.push("");
+      lines.push(listOrNone(diff.cli.added));
+    }
     return lines.join("\n");
   }
 
@@ -255,14 +266,7 @@ export function renderReport(diff, { surface }) {
     lines.push(
       `- \`upstream.json\` pins \`chatbotx-mcp@${diff.versions.mcp.pinned}\`, npm \`latest\` is \`${diff.versions.mcp.live}\`.`,
     );
-    if (
-      diff.cli.added.length === 0 &&
-      diff.cli.removed.length === 0 &&
-      diff.collisions.added.length === 0 &&
-      diff.collisions.removed.length === 0 &&
-      diff.mcp.added.length === 0 &&
-      diff.mcp.removed.length === 0
-    ) {
+    if (!diff.surfaceChanged) {
       lines.push(
         "- Surface (commands, collisions, default tools) is otherwise unchanged — this is a version-only bump.",
       );
@@ -313,7 +317,7 @@ export function renderReport(diff, { surface }) {
     "1. Update the affected file(s) above to match the live surface.",
   );
   lines.push(
-    "2. Bump `upstream.json` (and the `version:` field in the affected skill's `SKILL.md`, `.claude-plugin/plugin.json`, `.cursor-plugin` equivalents, `gemini-extension.json`) to the live npm version.",
+    "2. Bump `upstream.json` (and the `version:` field in the affected skill's `SKILL.md`, `.claude-plugin/plugin.json`, the `plugins[].version` fields in `.cursor-plugin/marketplace.json` and `.grok-plugin/marketplace.json`, `gemini-extension.json`) to the live npm version.",
   );
   lines.push("3. Add a `CHANGELOG.md` entry.");
   lines.push(
@@ -325,7 +329,7 @@ export function renderReport(diff, { surface }) {
 
 // --- CLI entrypoint ------------------------------------------------------------
 
-function parseArgs(argv) {
+export function parseArgs(argv) {
   const out = { surfaceArgs: [] };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -339,14 +343,51 @@ function parseArgs(argv) {
   return out;
 }
 
+function requireString(value, label) {
+  if (typeof value !== "string" || value.length === 0) {
+    throw new Error(`${label} must be a non-empty string.`);
+  }
+}
+
+function requireStringArray(value, label) {
+  if (!Array.isArray(value) || !value.every((item) => typeof item === "string")) {
+    throw new Error(`${label} must be an array of strings.`);
+  }
+}
+
+function requireObject(value, label) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`${label} must be an object.`);
+  }
+}
+
+export function validateSurface(surface) {
+  requireObject(surface, "surface");
+  requireObject(surface.cli, "surface.cli");
+  requireObject(surface.mcp, "surface.mcp");
+  requireString(surface.cli.version, "surface.cli.version");
+  requireStringArray(surface.cli.commands, "surface.cli.commands");
+  requireStringArray(surface.cli.collisions, "surface.cli.collisions");
+  requireString(surface.mcp.version, "surface.mcp.version");
+  requireStringArray(surface.mcp.defaultTools, "surface.mcp.defaultTools");
+}
+
+export function validatePins(pins) {
+  requireObject(pins, "upstream.json");
+  requireString(pins.chatbotx, "upstream.json chatbotx");
+  requireString(pins["chatbotx-mcp"], "upstream.json chatbotx-mcp");
+}
+
 export async function main(argv = process.argv.slice(2)) {
   const opts = parseArgs(argv);
 
   const surface = opts.surfacePath
     ? JSON.parse(readFileSync(opts.surfacePath, "utf8"))
     : await collectSurface(opts.surfaceArgs);
+  validateSurface(surface);
 
   const pins = JSON.parse(readFileSync(UPSTREAM_JSON, "utf8"));
+  validatePins(pins);
   const docs = {
     commands: parseCommandsDoc(readFileSync(COMMANDS_MD, "utf8")),
     collisions: parseCollisionsDoc(readFileSync(CLI_SKILL_MD, "utf8")),
@@ -359,11 +400,9 @@ export async function main(argv = process.argv.slice(2)) {
   process.stdout.write(`${report}\n`);
 
   if (opts.report) {
-    const { writeFileSync } = await import("node:fs");
     writeFileSync(opts.report, `${report}\n`);
   }
   if (opts.json) {
-    const { writeFileSync } = await import("node:fs");
     writeFileSync(opts.json, `${JSON.stringify(diff, null, 2)}\n`);
   }
 
@@ -374,6 +413,6 @@ export async function main(argv = process.argv.slice(2)) {
 if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch((err) => {
     process.stderr.write(`${err.stack ?? err.message}\n`);
-    process.exitCode = 1;
+    process.exitCode = 2;
   });
 }
