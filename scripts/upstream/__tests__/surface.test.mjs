@@ -1,14 +1,18 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import {
+  collectMcpSurface,
+  main as collectSurfaceMain,
+  parseArgs as parseSurfaceArgs,
   parseHelpCommands,
   collectCliSurface,
+  runNpxHelp,
   toSnakeCase,
   extractDefaultTools,
-  collectMcpSurface,
 } from "../surface.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -186,6 +190,18 @@ describe("collectCliSurface", () => {
     assert.equal(surface.collisions.length, 13);
   });
 
+  test("rejects root help without a Commands block", () => {
+    assert.throws(
+      () =>
+        collectCliSurface({
+          version: "1.8.4",
+          apiUrl: "https://app.chatbotx.io/api",
+          runHelp: () => ({ stdout: "Options:\n  --help\n", stderr: "" }),
+        }),
+      /root help.*Commands:/i,
+    );
+  });
+
   test("does not recurse past maxDepth", () => {
     let calls = 0;
     const runHelp = () => {
@@ -204,6 +220,26 @@ describe("collectCliSurface", () => {
     // depth 0 (root) + depth 1 ("deep") + depth 2 ("deep deep") = 3 calls,
     // depth 3 never visited.
     assert.equal(calls, 3);
+  });
+});
+
+describe("runNpxHelp", () => {
+  test("throws with command output when npx exits non-zero", () => {
+    assert.throws(
+      () =>
+        runNpxHelp({
+          version: "1.8.4",
+          apiUrl: "https://app.chatbotx.io/api",
+          tmpHome: "/tmp/chatbotx-drift",
+          pathTokens: [],
+          spawnSyncImpl: () => ({
+            status: 1,
+            stdout: "npm notice",
+            stderr: "package not found",
+          }),
+        }),
+      /exit 1[\s\S]*npm notice[\s\S]*package not found/,
+    );
   });
 });
 
@@ -255,9 +291,9 @@ describe("collectMcpSurface", () => {
       specUrl: "https://example.test/public-spec.json",
       fetchImpl,
     });
-    assert.equal(result.defaultCount, 4);
     assert.equal(result.operationCount, 6);
     assert.ok(result.defaultTools.includes("ai_agents_list"));
+    assert.ok(!Object.hasOwn(result, "defaultCount"));
   });
 
   test("throws a clear error on a non-ok response", async () => {
@@ -266,5 +302,52 @@ describe("collectMcpSurface", () => {
       () => collectMcpSurface({ specUrl: "https://x", fetchImpl }),
       /Failed to fetch OpenAPI spec.*500/,
     );
+  });
+
+  test("rejects specs without paths or operations", async () => {
+    assert.throws(() => extractDefaultTools({}), /missing a paths object/i);
+    await assert.rejects(
+      () =>
+        collectMcpSurface({
+          specUrl: "https://x",
+          fetchImpl: async () => ({ ok: true, json: async () => ({ paths: {} }) }),
+        }),
+      /contains no HTTP operations/i,
+    );
+  });
+});
+
+describe("surface CLI entrypoint", () => {
+  test("parses collection flags and writes a validated surface", async () => {
+    assert.deepEqual(
+      parseSurfaceArgs(["--cli-version", "1.8.4", "--out", "surface.json"]),
+      { cliVersion: "1.8.4", out: "surface.json" },
+    );
+
+    const directory = mkdtempSync(join(tmpdir(), "chatbotx-surface-test-"));
+    const out = join(directory, "surface.json");
+    try {
+      const surface = await collectSurfaceMain(
+        ["--cli-version", "1.8.4", "--mcp-version", "1.8.0", "--out", out],
+        {
+          collectCliSurfaceImpl: () => ({
+            commands: ["contacts list"],
+            collisions: ["contacts:custom-fields:update"],
+          }),
+          collectMcpSurfaceImpl: async ({ specUrl }) => ({
+            specUrl,
+            defaultTools: ["contacts_list"],
+            operationCount: 1,
+          }),
+          resolveNpmVersionImpl: () => assert.fail("versions are supplied"),
+        },
+      );
+
+      assert.deepEqual(surface.cli.commands, ["contacts list"]);
+      assert.ok(!Object.hasOwn(surface.mcp, "defaultCount"));
+      assert.deepEqual(JSON.parse(readFileSync(out, "utf8")), surface);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 });

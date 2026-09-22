@@ -1,13 +1,16 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import {
-  parseCommandsDoc,
-  parseCollisionsDoc,
-  parseMcpDefaultTools,
   diffSurface,
+  parseArgs as parseCheckArgs,
+  parseCollisionsDoc,
+  parseCommandsDoc,
+  parseMcpDefaultTools,
   renderReport,
 } from "../check-drift.mjs";
 
@@ -108,10 +111,12 @@ describe("parseCommandsDoc", () => {
 });
 
 describe("parseCollisionsDoc", () => {
-  test("returns empty when the heading is absent", () => {
-    assert.deepEqual(parseCollisionsDoc("# Nothing here"), []);
+  test("rejects a missing collision heading", () => {
+    assert.throws(
+      () => parseCollisionsDoc("# Nothing here"),
+      /missing required heading.*Command-name collisions/i,
+    );
   });
-
   test("normalizes a bare-word backtick span to group:action[:sub] form", () => {
     const md = [
       "## Command-name collisions",
@@ -140,16 +145,16 @@ describe("parseCollisionsDoc", () => {
     assert.deepEqual(parseCollisionsDoc(md), []);
   });
 
-  test("matches all 13 unique collisions the live CLI actually warns about", () => {
+  test("matches every collision the live CLI warns about", () => {
     const result = parseCollisionsDoc(realCliSkillMd());
-    // find-by-conversion-rules / find-by-files / find-by-folders are real
-    // collisions the live CLI reports but this doc does not yet mention —
-    // this is a known, expected gap that the drift report should surface,
-    // not something this parser should paper over.
-    assert.ok(result.includes("ads:conversion-rules"));
-    assert.ok(result.includes("bot-fields:update"));
-    assert.ok(result.includes("minigames:update"));
-    assert.equal(result.length, 11);
+    const liveCollisions = [
+      ...readFileSync(join(__dirname, "fixtures", "help-root.stderr.txt"), "utf8")
+        .matchAll(/duplicate command name "([^"]+)"/g),
+    ]
+      .map((match) => match[1])
+      .filter((name, index, names) => names.indexOf(name) === index)
+      .sort();
+    assert.deepEqual(result, liveCollisions);
   });
 });
 
@@ -196,6 +201,17 @@ describe("parseMcpDefaultTools", () => {
     assert.ok(!tools.includes("read_only"));
     assert.ok(!tools.includes("full"));
   });
+
+  test("rejects missing MCP section boundaries", () => {
+    assert.throws(
+      () => parseMcpDefaultTools("## Default tools"),
+      /missing required heading.*Discovery tools/i,
+    );
+    assert.throws(
+      () => parseMcpDefaultTools("## Discovery tools\n| `token_get` | x |"),
+      /missing required heading.*Scope and read-only behavior/i,
+    );
+  });
 });
 
 describe("diffSurface", () => {
@@ -227,13 +243,14 @@ describe("diffSurface", () => {
     assert.equal(diff.cli.added.length, 0);
   });
 
-  test("detects a new CLI command missing from docs", () => {
+  test("treats undocumented CLI additions as informational", () => {
     const surface = {
       ...baseSurface,
       cli: { ...baseSurface.cli, commands: ["contacts list", "contacts delete"] },
     };
     const diff = diffSurface({ surface, docs: baseDocs, pins: basePins });
-    assert.equal(diff.hasDrift, true);
+    assert.equal(diff.hasDrift, false);
+    assert.equal(diff.surfaceChanged, false);
     assert.deepEqual(diff.cli.added, ["contacts delete"]);
     assert.deepEqual(diff.cli.removed, []);
   });
@@ -297,5 +314,128 @@ describe("renderReport", () => {
     assert.ok(report.includes("MCP default tools"));
     assert.ok(report.includes("contacts_create"));
     assert.ok(report.includes("How to resolve"));
+  });
+
+  test("marks a version-only change without reporting surface sections", () => {
+    const diff = diffSurface({
+      surface: {
+        cli: { version: "1.8.5", commands: ["contacts list"], collisions: [] },
+        mcp: { version: "1.8.0", defaultTools: ["contacts_create"] },
+      },
+      docs: {
+        commands: ["contacts list"],
+        collisions: [],
+        mcpDefaultTools: ["contacts_create"],
+      },
+      pins: { chatbotx: "1.8.4", "chatbotx-mcp": "1.8.0" },
+    });
+    const report = renderReport(diff, { surface: { ...surface, cli: { version: "1.8.5" } } });
+    assert.ok(report.includes("version-only bump"));
+    assert.ok(!report.includes("## CLI commands"));
+    assert.ok(!report.includes("## MCP default tools"));
+  });
+
+  test("renders only MCP details for an MCP-only surface change", () => {
+    const diff = diffSurface({
+      surface: {
+        cli: { version: "1.8.4", commands: ["contacts list"], collisions: [] },
+        mcp: { version: "1.8.0", defaultTools: ["contacts_get"] },
+      },
+      docs: {
+        commands: ["contacts list"],
+        collisions: [],
+        mcpDefaultTools: ["contacts_create"],
+      },
+      pins: { chatbotx: "1.8.4", "chatbotx-mcp": "1.8.0" },
+    });
+    const report = renderReport(diff, { surface });
+    assert.ok(report.includes("## MCP default tools"));
+    assert.ok(!report.includes("## CLI commands"));
+    assert.ok(!report.includes("## Command-name collisions"));
+  });
+
+  test("renders undocumented CLI additions as informational without drift", () => {
+    const diff = {
+      hasDrift: false,
+      surfaceChanged: false,
+      versionsDrifted: false,
+      versions: {},
+      cli: { added: ["config get"], removed: [], changed: true },
+      collisions: { added: [], removed: [], changed: false },
+      mcp: { added: [], removed: [], changed: false },
+    };
+    const report = renderReport(diff, { surface });
+    assert.ok(report.includes("No drift detected"));
+    assert.ok(report.includes("Informational CLI commands"));
+    assert.ok(report.includes("config get"));
+  });
+});
+
+describe("check-drift CLI entrypoint", () => {
+  test("exits 0 for a matching surface, 1 for drift, and 2 for invalid input", () => {
+    assert.deepEqual(
+      parseCheckArgs(["--surface", "surface.json", "--report", "report.md"]),
+      { surfaceArgs: [], surfacePath: "surface.json", report: "report.md" },
+    );
+
+    const directory = mkdtempSync(join(tmpdir(), "chatbotx-drift-test-"));
+    const checker = join(REPO_ROOT, "scripts/upstream/check-drift.mjs");
+    const pins = JSON.parse(readFileSync(join(REPO_ROOT, "upstream.json"), "utf8"));
+    const matchingSurface = {
+      collectedAt: "2026-09-22T00:00:00.000Z",
+      specUrl: "https://app.chatbotx.io/api/public-spec.json",
+      cli: {
+        version: pins.chatbotx,
+        commands: parseCommandsDoc(realCommandsMd()),
+        collisions: parseCollisionsDoc(realCliSkillMd()),
+      },
+      mcp: {
+        version: pins["chatbotx-mcp"],
+        defaultTools: parseMcpDefaultTools(realMcpSkillMd()),
+      },
+    };
+
+    try {
+      const matchingPath = join(directory, "matching.json");
+      const cleanReport = join(directory, "clean.md");
+      writeFileSync(matchingPath, `${JSON.stringify(matchingSurface)}\n`);
+      const clean = spawnSync(
+        process.execPath,
+        [checker, "--surface", matchingPath, "--report", cleanReport],
+        { encoding: "utf8" },
+      );
+      assert.equal(clean.status, 0, clean.stderr);
+      assert.ok(existsSync(cleanReport));
+
+      const driftPath = join(directory, "drift.json");
+      const driftReport = join(directory, "drift.md");
+      writeFileSync(
+        driftPath,
+        `${JSON.stringify({
+          ...matchingSurface,
+          cli: { ...matchingSurface.cli, version: "1.8.5" },
+        })}\n`,
+      );
+      const drift = spawnSync(
+        process.execPath,
+        [checker, "--surface", driftPath, "--report", driftReport],
+        { encoding: "utf8" },
+      );
+      assert.equal(drift.status, 1, drift.stderr);
+      assert.ok(existsSync(driftReport));
+
+      const malformedPath = join(directory, "malformed.json");
+      const malformedReport = join(directory, "malformed.md");
+      writeFileSync(malformedPath, "{}\n");
+      const malformed = spawnSync(
+        process.execPath,
+        [checker, "--surface", malformedPath, "--report", malformedReport],
+        { encoding: "utf8" },
+      );
+      assert.equal(malformed.status, 2);
+      assert.ok(!existsSync(malformedReport));
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 });
