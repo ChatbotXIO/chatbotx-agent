@@ -1,0 +1,21 @@
+chatbotx integrations
+
+integrations commands
+
+Commands:
+  chatbotx integrations list                List integrations
+  chatbotx integrations get <id>            Get integration
+  chatbotx integrations                     List channel integrations with
+  status-token-errors                       failed token refresh
+  chatbotx integrations find-by-ai          Get AI provider integration
+  <provider>
+
+Options:
+      --apiKey               ChatbotX API key (global)                  [string]
+      --apiUrl               ChatbotX API URL (global)                  [string]
+      --allowSelfSignedCert  Disable TLS cert validation (local dev only)
+                                                                       [boolean]
+      --refresh-spec         Force refresh the cached OpenAPI spec
+                                                      [boolean] [default: false]
+  -h, --help                 Show help                                 [boolean]
+  -v, --version              Show version number                       [boolean]

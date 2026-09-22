@@ -1,0 +1,47 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "ChatbotX Public API", "version": "0.0.1" },
+  "paths": {
+    "/v1/ai-agents": {
+      "get": {
+        "operationId": "aiAgents.list",
+        "summary": "List AI agents",
+        "x-mcp": { "visibility": "default", "scope": "ai_agents", "readOnlyHint": true }
+      },
+      "post": {
+        "operationId": "aiAgents.create",
+        "summary": "Create AI agent",
+        "x-mcp": { "visibility": "default", "scope": "ai_agents" }
+      }
+    },
+    "/v1/analytics/new-contact-counts-per-day": {
+      "get": {
+        "operationId": "analytics.newContactCountsPerDay",
+        "summary": "New contact counts per day",
+        "x-mcp": { "visibility": "default", "scope": "analytics", "readOnlyHint": true }
+      }
+    },
+    "/v1/schemas/flow-spec": {
+      "get": {
+        "operationId": "schemas.flowSpec",
+        "summary": "Get flow-spec JSON Schema",
+        "x-mcp": { "visibility": "default", "alwaysVisible": true, "readOnlyHint": true }
+      }
+    },
+    "/v1/coupons": {
+      "get": {
+        "operationId": "coupons.list",
+        "summary": "List coupons",
+        "x-mcp": { "visibility": "hidden", "scope": "coupons", "readOnlyHint": true }
+      }
+    },
+    "/v1/coupons/{couponId}": {
+      "delete": {
+        "operationId": "coupons.delete",
+        "summary": "Delete coupon",
+        "deprecated": true,
+        "x-mcp": { "visibility": "default", "scope": "coupons" }
+      }
+    }
+  }
+}

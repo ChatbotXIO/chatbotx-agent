@@ -132,17 +132,65 @@ chatbotx capabilities list
 
 ```
 skills/
-  chatbotx/            CLI skill: SKILL.md, references/commands.md, skill-card.md
-  chatbotx-mcp/        MCP skill: SKILL.md, skill-card.md
-.claude-plugin/        Claude Code plugin + marketplace (skills + mcpServers + userConfig)
-.cursor-plugin/        Cursor plugin + marketplace + mcp.json
-.grok-plugin/          Grok plugin + marketplace + mcp.json
-gemini-extension.json  Gemini CLI extension (MCP server)
-mcp.json               Generic stdio MCP config
+  chatbotx/               CLI skill: SKILL.md, references/commands.md, skill-card.md
+  chatbotx-mcp/           MCP skill: SKILL.md, skill-card.md
+.claude-plugin/           Claude Code plugin + marketplace (skills + mcpServers + userConfig)
+.cursor-plugin/           Cursor plugin + marketplace + mcp.json
+.grok-plugin/             Grok plugin + marketplace + mcp.json
+gemini-extension.json     Gemini CLI extension (MCP server)
+mcp.json                  Generic stdio MCP config
+upstream.json             Pinned chatbotx / chatbotx-mcp npm versions the skills are documented against
+scripts/upstream/         Upstream drift check (see "Keeping in sync with upstream" below)
+.github/workflows/        Scheduled drift check (upstream-drift.yml)
 ```
 
 There is deliberately no `SKILL.md` at the repository root: a root skill would shadow `skills/` for
 `npx skills add` and make the whole repository install as one skill.
+
+## Keeping in sync with upstream
+
+The `chatbotx` CLI and `chatbotx-mcp` server (both in
+[`ChatbotXIO/ChatbotX`](https://github.com/ChatbotXIO/ChatbotX)) generate their command/tool surface
+at runtime from the live `GET {API_URL}/public-spec.json`. That means this repo's docs can drift from
+what an agent actually sees in two independent ways:
+
+1. **The public API changes** — an operation is added, removed, renamed, or its
+   `x-mcp.visibility` flips — and the live surface changes immediately, with no npm publish.
+2. **The `chatbotx` / `chatbotx-mcp` packages publish a new version** — global flags, Node version
+   requirements, or the command-name-collision logic change.
+
+`upstream.json` pins the npm versions the docs in `skills/` are currently written against.
+`.github/workflows/upstream-drift.yml` runs daily (and on demand via `workflow_dispatch`), and:
+
+- collects the *actual* CLI surface by running the published `chatbotx` binary's `--help` recursively
+  and reading `duplicate command name` warnings off stderr, and the *actual* MCP default tool set by
+  fetching `public-spec.json` directly and filtering `x-mcp.visibility: "default"` operations;
+- compares that live surface against `skills/chatbotx/references/commands.md`, the
+  `## Command-name collisions` section of `skills/chatbotx/SKILL.md`, and the default-tools table in
+  `skills/chatbotx-mcp/SKILL.md`, plus the version pinned in `upstream.json`;
+- opens or updates a single GitHub issue labeled `upstream-drift` describing exactly what changed,
+  and closes it automatically once a later run finds the docs match again.
+
+This repo is pull-only with respect to `ChatbotXIO/ChatbotX` — it has no push access there and no
+cross-repo token, so it never edits that repo. A `repository_dispatch` trigger (`upstream-published`)
+is wired up so that repo could push an immediate check instead of waiting for the next scheduled run,
+but nothing there calls it yet.
+
+Run the check locally:
+
+```bash
+npm test                 # parser unit tests (scripts/upstream/__tests__/)
+npm run check:upstream   # full check against the live CLI + MCP spec; prints a report, exits 1 on drift
+```
+
+When the check finds drift, resolve it by:
+
+1. Updating the affected file(s) the report names.
+2. Bumping `upstream.json` (and the `version:` field in the affected skill's `SKILL.md`,
+   `.claude-plugin/plugin.json`, the `.cursor-plugin`/`.grok-plugin` equivalents, and
+   `gemini-extension.json`) to the live npm version.
+3. Adding a `CHANGELOG.md` entry.
+4. Merging — the next scheduled run closes the drift issue automatically.
 
 ## Publishing
 

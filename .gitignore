@@ -28,3 +28,6 @@ build/
 .agents/
 .claude/
 skills-lock.json
+
+# scripts/upstream/surface.mjs output (regenerated on every check-drift run)
+.upstream/

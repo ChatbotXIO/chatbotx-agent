@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Added an upstream drift check (`scripts/upstream/`, `.github/workflows/upstream-drift.yml`,
+  `upstream.json`): a daily job compares the live, published `chatbotx` CLI and the live
+  `chatbotx-mcp` default tool set against the docs in `skills/`, and opens/closes a single
+  `upstream-drift`-labeled issue when they disagree. Run locally with `npm run check:upstream`.
+  This is tooling only — it does not change any skill's published content or `version:`.
+
 ## 1.1.1
 
 - `chatbotx` skill: moved the per-command catalog to `skills/chatbotx/references/commands.md` and
