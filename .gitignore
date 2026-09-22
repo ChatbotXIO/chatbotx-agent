@@ -23,3 +23,8 @@ build/
 .DS_Store
 .idea/
 .vscode/
+
+# Local skill-install artifacts (npx skills add .)
+.agents/
+.claude/
+skills-lock.json

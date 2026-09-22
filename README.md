@@ -4,49 +4,78 @@
 
 # ChatbotX Agent
 
-Agent-facing distribution for ChatbotX. This repository publishes only two public skills and the IDE/ADE plugin manifests needed to connect AI agents to ChatbotX:
+Agent-facing distribution for ChatbotX. This repository publishes two public skills plus the plugin
+manifests that connect AI coding agents to a ChatbotX workspace:
 
-- `chatbotx` — use the `chatbotx` CLI from an agent terminal.
-- `chatbotx-mcp` — use ChatbotX MCP tools from MCP-capable agents and IDEs.
+- `skills/chatbotx` — drive the `chatbotx` CLI from an agent's shell. Terminal agents, bulk work,
+  scripted pipelines.
+- `skills/chatbotx-mcp` — use the ChatbotX MCP server's tools from MCP-capable agents and IDEs.
 
-The ChatbotX product source stays in [`ChatbotXIO/ChatbotX`](https://github.com/ChatbotXIO/ChatbotX). This repository intentionally excludes internal development skills.
+IDE/ADE plugins ship **both** skills together with the MCP server: MCP provides the connection,
+the skills teach the agent the workflow (discover → resolve ids → act → verify) and when to fall back
+to the CLI. This mirrors how Stripe, Sentry, Supabase, and Cloudflare distribute their agent plugins.
 
-## Install as skills
+The ChatbotX product source stays in [`ChatbotXIO/ChatbotX`](https://github.com/ChatbotXIO/ChatbotX).
+This repository intentionally excludes internal development skills.
 
-The repository root carries a `SKILL.md`, so `npx skills add` installs the `chatbotx` CLI skill
-with no further arguments:
+## Prerequisites
+
+- A ChatbotX workspace API key (ChatbotX → Settings → Developer → API Keys). Prefer a read-only key
+  for discovery and analytics tasks.
+- A base API URL only for a self-hosted instance. SaaS defaults to `https://app.chatbotx.io/api`.
+- Node.js (the CLI documents Node 24+, the MCP server requires Node 18+).
+
+## Install
+
+| Agent | Skills | MCP server |
+|---|---|---|
+| Claude Code | plugin (below) — installs both skills | started by the plugin; prompts only for the key |
+| Cursor | plugin (below) — installs both skills | started by the plugin; prompts only for the key |
+| Codex | `npx skills add ChatbotXIO/chatbotx-agent` → `.agents/skills/` | `~/.codex/config.toml` block below |
+| Windsurf, Gemini CLI, Copilot, others | `npx skills add ChatbotXIO/chatbotx-agent` | generic `mcp.json` block below |
+| Grok | `.grok-plugin/` manifest | included in the manifest |
+| Gemini CLI extension | — | `gemini-extension.json` |
+
+### Skills (any agent that reads `SKILL.md`)
 
 ```bash
+# Pick one or both skills interactively
 npx skills add ChatbotXIO/chatbotx-agent
+
+# Or install a specific one
+npx skills add ChatbotXIO/chatbotx-agent --skill chatbotx
+npx skills add ChatbotXIO/chatbotx-agent --skill chatbotx-mcp
+
+# List what this repo publishes
+npx skills add ChatbotXIO/chatbotx-agent --list
 ```
 
-A root `SKILL.md` stops skills.sh from scanning `skills/`, so install the MCP skill by its path or
-with `--full-depth`:
+Installing the `chatbotx` skill does not install the `chatbotx` binary. The skill tells the agent to
+run `npm install -g chatbotx` on first use if the command is missing.
 
-```bash
-npx skills add ChatbotXIO/chatbotx-agent/skills/chatbotx-mcp
-# or
-npx skills add ChatbotXIO/chatbotx-agent --full-depth --skill chatbotx-mcp
-
-# List everything this repo publishes
-npx skills add ChatbotXIO/chatbotx-agent --full-depth --list
-```
-
-Expected list with `--full-depth`: `chatbotx` and `chatbotx-mcp` only. The root `SKILL.md` is a
-copy of `skills/chatbotx/SKILL.md`; keep the two files identical when editing either one.
-
-## Claude Code plugin
+### Claude Code
 
 ```bash
 /plugin marketplace add ChatbotXIO/chatbotx-agent
 /plugin install chatbotx@chatbotx-agent
 ```
 
-## Cursor plugin
+The plugin loads both skills and starts the ChatbotX MCP server. Claude Code asks only for the API
+key when the plugin is enabled (`userConfig`); the key is stored in secure storage. The server uses
+the SaaS URL by default. To use the MCP server without the plugin:
 
-This repo ships a Cursor plugin manifest at `.cursor-plugin/plugin.json`.
+```bash
+claude mcp add chatbotx \
+  -e CHATBOTX_API_KEY=<your-token> \
+  -e CHATBOTX_API_URL=https://app.chatbotx.io/api \
+  -e CHATBOTX_MCP_TRANSPORT=stdio \
+  -s user \
+  -- npx -y chatbotx-mcp
+```
 
-Local development install:
+### Cursor
+
+This repo ships a Cursor plugin at `.cursor-plugin/` (skills + MCP server + variables). Local install:
 
 ```bash
 git clone https://github.com/ChatbotXIO/chatbotx-agent.git
@@ -54,19 +83,28 @@ mkdir -p ~/.cursor/plugins/local
 ln -s "$(pwd)/chatbotx-agent" ~/.cursor/plugins/local/chatbotx
 ```
 
-Then restart Cursor or run **Developer: Reload Window**. Configure `CHATBOTX_API_KEY` and `CHATBOTX_API_URL` from Cursor's plugin configuration UI.
+Restart Cursor or run **Developer: Reload Window**, then set `CHATBOTX_API_KEY` in the plugin
+configuration UI. For a self-hosted instance, replace the API URL in `.cursor-plugin/mcp.json`.
 
-## CLI
+### Codex
 
 ```bash
-npm install -g chatbotx
-chatbotx config set --apiKey <your-workspace-token> --apiUrl https://app.chatbotx.io/api
-chatbotx capabilities list
+npx skills add ChatbotXIO/chatbotx-agent   # skills → .agents/skills/
 ```
 
-## MCP server
+Then add the MCP server to `~/.codex/config.toml`:
 
-The plugin starts the local stdio MCP server through npm:
+```toml
+[mcp_servers.chatbotx]
+command = "npx"
+args = ["-y", "chatbotx-mcp"]
+env = { CHATBOTX_API_KEY = "<your-token>", CHATBOTX_API_URL = "https://app.chatbotx.io/api", CHATBOTX_MCP_TRANSPORT = "stdio" }
+```
+
+### Generic MCP clients (Windsurf, Gemini CLI, Copilot, ...)
+
+Install the skills with `npx skills add` as above, then register the stdio server. `mcp.json` at the
+repository root holds this block:
 
 ```json
 {
@@ -82,34 +120,62 @@ The plugin starts the local stdio MCP server through npm:
 }
 ```
 
-For generic MCP clients, use `mcp.json` at the repository root.
-
-Prerequisite: `chatbotx-mcp` must be published to npm before public marketplace submission. In the product repository, run the MCP npm publish workflow first, then verify:
+### CLI only
 
 ```bash
-npm view chatbotx-mcp version
+npm install -g chatbotx
+chatbotx config set --apiKey <your-workspace-token> --apiUrl https://app.chatbotx.io/api
+chatbotx capabilities list
 ```
+
+## Repository layout
+
+```
+skills/
+  chatbotx/            CLI skill: SKILL.md, references/commands.md, skill-card.md
+  chatbotx-mcp/        MCP skill: SKILL.md, skill-card.md
+.claude-plugin/        Claude Code plugin + marketplace (skills + mcpServers + userConfig)
+.cursor-plugin/        Cursor plugin + marketplace + mcp.json
+.grok-plugin/          Grok plugin + marketplace + mcp.json
+gemini-extension.json  Gemini CLI extension (MCP server)
+mcp.json               Generic stdio MCP config
+```
+
+There is deliberately no `SKILL.md` at the repository root: a root skill would shadow `skills/` for
+`npx skills add` and make the whole repository install as one skill.
 
 ## Publishing
 
 ### skills.sh
 
-No separate publish command is required. Push this public repository and install with `npx skills add`.
+No publish step. Push this public repository; `npx skills add ChatbotXIO/chatbotx-agent` reads `skills/`.
 
 ### ClawHub
 
 ```bash
-clawhub skill publish skills/chatbotx --version 1.0.0 --dry-run --json
-clawhub skill publish skills/chatbotx-mcp --version 1.0.0 --dry-run --json
+clawhub skill publish skills/chatbotx --version 1.1.1 --dry-run --json
+clawhub skill publish skills/chatbotx-mcp --version 1.1.1 --dry-run --json
 
-clawhub skill publish skills/chatbotx --version 1.0.0 --changelog "Initial ChatbotX CLI skill"
-clawhub skill publish skills/chatbotx-mcp --version 1.0.0 --changelog "Initial ChatbotX MCP skill"
+clawhub skill publish skills/chatbotx --version 1.1.1 --changelog "Default SaaS API URL; only prompt for the API key"
+clawhub skill publish skills/chatbotx-mcp --version 1.1.1 --changelog "Default SaaS API URL; only prompt for the API key"
 ```
 
 ### Cursor Marketplace
 
-Submit this repository at <https://cursor.com/marketplace/publish>. Cursor reads `.cursor-plugin/plugin.json`, `.cursor-plugin/marketplace.json`, and `.cursor-plugin/mcp.json`.
+Submit this repository at <https://cursor.com/marketplace/publish>. Cursor reads
+`.cursor-plugin/plugin.json`, `.cursor-plugin/marketplace.json`, and `.cursor-plugin/mcp.json`.
+
+### npm prerequisite
+
+Every manifest starts the server with `npx -y chatbotx-mcp`, so `chatbotx-mcp` must be published to
+npm before marketplace submission:
+
+```bash
+npm view chatbotx-mcp version
+```
 
 ## Safety
 
-ChatbotX agents can mutate live workspace data and send messages to real contacts. Use least-privilege workspace API keys, verify recipient/audience counts before writes, and prefer read-only tokens for discovery tasks.
+ChatbotX agents can mutate live workspace data and send messages to real contacts. Use
+least-privilege workspace API keys, verify recipient/audience counts before writes, and prefer
+read-only tokens for discovery tasks.

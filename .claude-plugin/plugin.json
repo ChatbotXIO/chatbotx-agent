@@ -1,7 +1,7 @@
 {
   "name": "chatbotx",
-  "version": "1.0.0",
-  "description": "ChatbotX CLI and MCP workflows for AI agents.",
+  "version": "1.1.1",
+  "description": "ChatbotX for AI agents: the chatbotx CLI skill, the ChatbotX MCP server, and the MCP usage skill for contacts, conversations, flows, broadcasts, sequences, and analytics.",
   "author": {
     "name": "ChatbotXIO",
     "email": "support@chatbotx.io",
@@ -10,6 +10,26 @@
   "homepage": "https://chatbotx.io",
   "repository": "https://github.com/ChatbotXIO/chatbotx-agent",
   "license": "MIT-0",
+  "keywords": ["chatbotx", "mcp", "cli", "automation", "ai-agent"],
   "skills": ["./skills/chatbotx", "./skills/chatbotx-mcp"],
-  "keywords": ["chatbotx", "mcp", "cli", "automation", "ai-agent"]
+  "mcpServers": {
+    "chatbotx": {
+      "command": "npx",
+      "args": ["-y", "chatbotx-mcp"],
+      "env": {
+        "CHATBOTX_API_KEY": "${user_config.api_key}",
+        "CHATBOTX_API_URL": "https://app.chatbotx.io/api",
+        "CHATBOTX_MCP_TRANSPORT": "stdio"
+      }
+    }
+  },
+  "userConfig": {
+    "api_key": {
+      "type": "string",
+      "title": "ChatbotX API key",
+      "description": "Workspace API key from ChatbotX Settings → Developer → API Keys.",
+      "sensitive": true,
+      "required": true
+    }
+  }
 }

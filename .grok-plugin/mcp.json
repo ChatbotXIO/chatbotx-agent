@@ -4,7 +4,7 @@
     "args": ["-y", "chatbotx-mcp"],
     "env": {
       "CHATBOTX_API_KEY": "${CHATBOTX_API_KEY}",
-      "CHATBOTX_API_URL": "${CHATBOTX_API_URL}",
+      "CHATBOTX_API_URL": "https://app.chatbotx.io/api",
       "CHATBOTX_MCP_TRANSPORT": "stdio"
     }
   }
