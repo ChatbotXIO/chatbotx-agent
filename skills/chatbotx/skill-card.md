@@ -71,7 +71,8 @@ exit code alone.
 
 ## References
 
-- This skill's `SKILL.md` — full command reference and command-name collision table.
+- This skill's `SKILL.md` — agent rules, workflow, and command-name collision table.
+- This skill's `references/commands.md` — full command catalog grouped by resource.
 - `apps/cli/README.md` in the source repository — hand-maintained, more detailed CLI reference.
 - Source repository: https://github.com/ChatbotXIO/ChatbotX/tree/main/apps/cli
 
