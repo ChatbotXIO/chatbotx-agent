@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "node --test scripts/upstream/__tests__/*.test.mjs",
+    "check:upstream": "node scripts/upstream/check-drift.mjs"
+  }
+}

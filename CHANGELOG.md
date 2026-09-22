@@ -1,7 +1,18 @@
 # Changelog
 
+## Unreleased
+
+- Added an upstream drift check (`scripts/upstream/`, `.github/workflows/upstream-drift.yml`,
+  `upstream.json`): a daily job compares the live, published `chatbotx` CLI and the live
+  `chatbotx-mcp` default tool set against the docs in `skills/`, and opens/closes a single
+  `upstream-drift`-labeled issue when they disagree. Run locally with `npm run check:upstream`.
+  This is tooling only — it does not change any skill's published content or `version:`.
+
 ## 1.1.1
 
+- `chatbotx` skill: moved the per-command catalog to `skills/chatbotx/references/commands.md` and
+  kept a one-line-per-group index in `SKILL.md`. The 1.1.0 note below announced this move, but the
+  file did not ship until now.
 - Default MCP and CLI skill configuration to `https://app.chatbotx.io/api`; SaaS users now provide
   only an API key. Self-hosted instances still set their explicit `/api` URL.
 
@@ -10,7 +21,7 @@
 - Removed the root `SKILL.md`. Skills now live only under `skills/`, so `npx skills add
   ChatbotXIO/chatbotx-agent` lists both `chatbotx` and `chatbotx-mcp`, installs only the skill folder,
   and no longer needs `--full-depth`.
-- `chatbotx` skill is CLI-only: moved the command catalog to `skills/chatbotx/references/commands.md`,
+- `chatbotx` skill is CLI-only: the command catalog stays in `SKILL.md` (moved to `references/` in 1.1.1),
   agents discover flags with `--help`, and the skill auto-installs the CLI when it is missing.
 - Both skills state when to switch to the other transport (MCP tools connected vs bulk/CLI work).
 - Claude Code plugin now starts the ChatbotX MCP server and prompts for the API key and URL via

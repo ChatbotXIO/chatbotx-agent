@@ -1,7 +1,7 @@
 ---
 name: chatbotx-mcp
 description: Use ChatbotX MCP tools to operate contacts, conversations, flows, broadcasts, sequences, analytics, and workspace automation from agentic IDEs.
-version: 1.0.0
+version: 1.1.1
 homepage: https://github.com/ChatbotXIO/chatbotx-agent/tree/main/skills/chatbotx-mcp
 emoji: "🔌"
 metadata:

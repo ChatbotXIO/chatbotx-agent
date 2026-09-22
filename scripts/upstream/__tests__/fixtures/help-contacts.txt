@@ -1,0 +1,52 @@
+chatbotx contacts
+
+contacts commands
+
+Commands:
+  chatbotx contacts list                    List contacts
+  chatbotx contacts create                  Create contact
+  chatbotx contacts count                   Count contacts matching filter
+  chatbotx contacts get <identifier>        Get contact
+  chatbotx contacts update <identifier>     Update contact fields
+  chatbotx contacts delete <identifier>     Delete contact
+  chatbotx contacts import                  Import contacts from file
+  chatbotx contacts block <identifier>      Block contact
+  chatbotx contacts unblock <identifier>    Unblock contact
+  chatbotx contacts imports                 List contact import jobs
+  chatbotx contacts find-by-imports <id>    Get contact import job
+  chatbotx contacts filter-fields           List contact filter fields
+  chatbotx contacts bulk-tags               Add tags to multiple contacts by
+                                            name
+  chatbotx contacts bulk-delete             Delete multiple contacts
+  chatbotx contacts bulk-sequences          Subscribe multiple contacts to one
+                                            or more sequences
+  chatbotx contacts export                  Start contact export job
+  chatbotx contacts find-by-export-files    Get contact export file status and
+  <fileId>                                  download URL
+  chatbotx contacts upsert                  upsert commands
+  chatbotx contacts tags                    tags commands
+  chatbotx contacts tag                     tag commands
+  chatbotx contacts by-name                 by-name commands
+  chatbotx contacts custom-fields           custom-fields commands
+  chatbotx contacts custom-field            custom-field commands
+  chatbotx contacts message                 message commands
+  chatbotx contacts messages                messages commands
+  chatbotx contacts auto-replie             auto-replie commands
+  chatbotx contacts flow                    flow commands
+  chatbotx contacts notes                   notes commands
+  chatbotx contacts note                    note commands
+  chatbotx contacts sequences               sequences commands
+  chatbotx contacts sequence                sequence commands
+  chatbotx contacts inboxes                 inboxes commands
+  chatbotx contacts refresh-profile         refresh-profile commands
+  chatbotx contacts coupons                 coupons commands
+
+Options:
+      --apiKey               ChatbotX API key (global)                  [string]
+      --apiUrl               ChatbotX API URL (global)                  [string]
+      --allowSelfSignedCert  Disable TLS cert validation (local dev only)
+                                                                       [boolean]
+      --refresh-spec         Force refresh the cached OpenAPI spec
+                                                      [boolean] [default: false]
+  -h, --help                 Show help                                 [boolean]
+  -v, --version              Show version number                       [boolean]

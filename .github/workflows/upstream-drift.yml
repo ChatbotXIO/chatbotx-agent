@@ -1,0 +1,154 @@
+name: Upstream drift check
+
+# Checks the live, published `chatbotx` CLI (npm) and the live
+# `chatbotx-mcp` default tool set (fetched from ChatbotXIO/ChatbotX's public
+# https://app.chatbotx.io/api/public-spec.json) against the hand-written
+# docs in skills/, and against the version pinned in upstream.json.
+#
+# Pull-only by design: this repo has no push access to ChatbotXIO/ChatbotX
+# and no cross-repo token. `repository_dispatch` is wired up so a future
+# `upstream-published` event from that repo's publish workflows can trigger
+# an immediate check instead of waiting for the next scheduled run — see
+# README.md "Keeping in sync with upstream" for the follow-up needed on the
+# ChatbotX side to send it.
+
+on:
+  schedule:
+    - cron: "0 3 * * *" # daily, 03:00 UTC
+  workflow_dispatch:
+    inputs:
+      cli_version:
+        description: "Override the chatbotx CLI version to check (defaults to npm latest)"
+        required: false
+        type: string
+      mcp_version:
+        description: "Override the chatbotx-mcp version to check (defaults to npm latest)"
+        required: false
+        type: string
+  repository_dispatch:
+    types: [upstream-published]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: upstream-drift
+  cancel-in-progress: true
+
+env:
+  DRIFT_ISSUE_LABEL: upstream-drift
+
+jobs:
+  check:
+    name: Check for drift
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Run parser unit tests
+        run: npm test
+
+      - name: Run drift check
+        id: drift
+        continue-on-error: true
+        env:
+          CLI_VERSION_OVERRIDE: ${{ inputs.cli_version }}
+          MCP_VERSION_OVERRIDE: ${{ inputs.mcp_version }}
+        run: |
+          ARGS=(--report drift.md --json drift.json)
+          if [[ -n "${CLI_VERSION_OVERRIDE}" ]]; then
+            ARGS+=(--cli-version "${CLI_VERSION_OVERRIDE}")
+          fi
+          if [[ -n "${MCP_VERSION_OVERRIDE}" ]]; then
+            ARGS+=(--mcp-version "${MCP_VERSION_OVERRIDE}")
+          fi
+          # GitHub Actions runs `run:` under `bash -eo pipefail` by default,
+          # so a non-zero exit from `node` here would abort the step before
+          # its exit code could be captured below. Capture it inline in the
+          # same statement so `set -e` never sees a failing command.
+          OUTCOME=0
+          node scripts/upstream/check-drift.mjs "${ARGS[@]}" || OUTCOME=$?
+          echo "outcome=${OUTCOME}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload surface + report artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upstream-drift-check
+          path: |
+            .upstream/surface.json
+            drift.md
+            drift.json
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Ensure the drift label exists
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create "${DRIFT_ISSUE_LABEL}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --color "B60205" \
+            --description "Live chatbotx CLI/MCP surface has drifted from skills/ docs" \
+            --force
+
+      - name: Find existing open drift issue
+        if: always()
+        id: existing
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NUMBER=$(gh issue list \
+            --repo "${GITHUB_REPOSITORY}" \
+            --label "${DRIFT_ISSUE_LABEL}" \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')
+          echo "number=${NUMBER}" >> "$GITHUB_OUTPUT"
+
+      - name: Open or update the drift issue
+        if: steps.drift.outputs.outcome == '1' && hashFiles('drift.md') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TITLE="Upstream drift: chatbotx / chatbotx-mcp"
+          if [[ -n "${{ steps.existing.outputs.number }}" ]]; then
+            gh issue edit "${{ steps.existing.outputs.number }}" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --title "${TITLE}" \
+              --body-file drift.md
+          else
+            gh issue create \
+              --repo "${GITHUB_REPOSITORY}" \
+              --title "${TITLE}" \
+              --label "${DRIFT_ISSUE_LABEL}" \
+              --body-file drift.md
+          fi
+
+      - name: Close the drift issue once the surface matches again
+        if: steps.drift.outputs.outcome == '0' && steps.existing.outputs.number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment "${{ steps.existing.outputs.number }}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --body "Resolved by ${GITHUB_SHA} — the live CLI/MCP surface now matches \`skills/\` and \`upstream.json\`."
+          gh issue close "${{ steps.existing.outputs.number }}" \
+            --repo "${GITHUB_REPOSITORY}"
+
+      - name: Fail the job when drift was found
+        if: steps.drift.outputs.outcome == '1'
+        run: exit 1
+
+      - name: Fail the job when the checker crashed
+        if: steps.drift.outputs.outcome != '0' && steps.drift.outputs.outcome != '1'
+        run: exit "${{ steps.drift.outputs.outcome }}"

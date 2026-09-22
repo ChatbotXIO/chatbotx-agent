@@ -1,0 +1,71 @@
+chatbotx <group> <action> [options]
+
+Commands:
+  chatbotx config                          Configuration commands
+  chatbotx ads                             ads commands
+  chatbotx ai-agents                       ai-agents commands
+  chatbotx ai-files                        ai-files commands
+  chatbotx ai-functions                    ai-functions commands
+  chatbotx ai-mcp-servers                  ai-mcp-servers commands
+  chatbotx analytics                       analytics commands
+  chatbotx appointment-calendars           appointment-calendars commands
+  chatbotx appointment-external-calendars  appointment-external-calendars
+                                           commands
+  chatbotx appointment-reminders           appointment-reminders commands
+  chatbotx appointments                    appointments commands
+  chatbotx bot-fields                      bot-fields commands
+  chatbotx broadcasts                      broadcasts commands
+  chatbotx capabilities                    capabilities commands
+  chatbotx contact-scans                   contact-scans commands
+  chatbotx contacts                        contacts commands
+  chatbotx conversations                   conversations commands
+  chatbotx coupon-topics                   coupon-topics commands
+  chatbotx coupons                         coupons commands
+  chatbotx custom-fields                   custom-fields commands
+  chatbotx dynamic-images                  dynamic-images commands
+  chatbotx email-topics                    email-topics commands
+  chatbotx error-logs                      error-logs commands
+  chatbotx external-webhooks               external-webhooks commands
+  chatbotx facebook-lead-ads               facebook-lead-ads commands
+  chatbotx fb-comments                     fb-comments commands
+  chatbotx flows                           flows commands
+  chatbotx folders                         folders commands
+  chatbotx ig-comments                     ig-comments commands
+  chatbotx ig-stories                      ig-stories commands
+  chatbotx teams                           teams commands
+  chatbotx inboxes                         inboxes commands
+  chatbotx integrations                    integrations commands
+  chatbotx keywords                        keywords commands
+  chatbotx media-library                   media-library commands
+  chatbotx messenger-channels              messenger-channels commands
+  chatbotx messenger-personas              messenger-personas commands
+  chatbotx minigames                       minigames commands
+  chatbotx product-categories              product-categories commands
+  chatbotx products                        products commands
+  chatbotx qr-codes                        qr-codes commands
+  chatbotx questionnaires                  questionnaires commands
+  chatbotx ref-links                       ref-links commands
+  chatbotx saved-replies                   saved-replies commands
+  chatbotx schemas                         schemas commands
+  chatbotx sequences                       sequences commands
+  chatbotx smtp-integrations               smtp-integrations commands
+  chatbotx spreadsheets                    spreadsheets commands
+  chatbotx tags                            tags commands
+  chatbotx token                           token commands
+  chatbotx triggers                        triggers commands
+  chatbotx user-persistent-menus           user-persistent-menus commands
+  chatbotx webchats                        webchats commands
+  chatbotx webhooks                        webhooks commands
+  chatbotx whatsapp                        whatsapp commands
+  chatbotx members                         members commands
+  chatbotx zalo-channels                   zalo-channels commands
+
+Options:
+      --apiKey               ChatbotX API key (global)                  [string]
+      --apiUrl               ChatbotX API URL (global)                  [string]
+      --allowSelfSignedCert  Disable TLS cert validation (local dev only)
+                                                                       [boolean]
+      --refresh-spec         Force refresh the cached OpenAPI spec
+                                                      [boolean] [default: false]
+  -h, --help                 Show help                                 [boolean]
+  -v, --version              Show version number                       [boolean]

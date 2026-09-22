@@ -1,0 +1,15 @@
+Warning: duplicate command name "ads:conversion-rules" — skipping
+Warning: duplicate command name "ads:find-by-conversion-rules" — skipping
+Warning: duplicate command name "ads:find-by-conversion-rules" — skipping
+Warning: duplicate command name "ads:campaigns" — skipping
+Warning: duplicate command name "analytics:flows-stats" — skipping
+Warning: duplicate command name "bot-fields:update" — skipping
+Warning: duplicate command name "contacts:custom-fields:update" — skipping
+Warning: duplicate command name "contacts:custom-field:delete" — skipping
+Warning: duplicate command name "integrations:find-by-ai" — skipping
+Warning: duplicate command name "integrations:find-by-ai" — skipping
+Warning: duplicate command name "media-library:folders" — skipping
+Warning: duplicate command name "media-library:find-by-folders" — skipping
+Warning: duplicate command name "media-library:files" — skipping
+Warning: duplicate command name "media-library:find-by-files" — skipping
+Warning: duplicate command name "minigames:update" — skipping
