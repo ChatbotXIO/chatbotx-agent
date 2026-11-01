@@ -16,25 +16,25 @@ This skill package (SKILL.md, skill-card.md, and this folder) is published to Cl
 
 ## Use Case
 
-External developers and AI agents that already hold a ChatbotX workspace API key and want MCP-native access to workspace discovery, contact management, messaging, flows, sequences, broadcasts, analytics, and related automation.
+External developers and AI agents that can sign in to a ChatbotX workspace (OAuth) or hold a workspace API key, and want MCP-native access to workspace discovery, contact management, messaging, flows, sequences, broadcasts, analytics, and related automation.
 
 ## Deployment Geography for Use
 
-Global — the MCP server talks to whatever `CHATBOTX_API_URL` is configured (ChatbotX SaaS or a self-hosted instance); it has no built-in geographic restriction.
+Global — the hosted server at `https://app.chatbotx.io/mcp/messages` serves ChatbotX SaaS; the local stdio server talks to whatever `CHATBOTX_API_URL` is configured (SaaS or self-hosted). No built-in geographic restriction.
 
 ### Requirements / Dependencies
 
 Requires API Key or External Credential: Yes
-Credential Type(s): API key (ChatbotX workspace API key, `CHATBOTX_API_KEY`)
+Credential Type(s): OAuth 2.1 sign-in for the hosted server (the user picks one workspace on the consent screen; owners and super admins only), or a ChatbotX workspace API key (`CHATBOTX_API_KEY`) for the local stdio server.
 
-Runtime dependency: Node.js and the `chatbotx-mcp` npm package. The plugin manifests start it with `npx -y chatbotx-mcp`.
+Runtime dependency: none for the hosted server, which the plugin manifests connect to by default. The local stdio fallback needs Node.js 24+ and the `chatbotx-mcp` npm package (`npx -y chatbotx-mcp`).
 
 Do not include secrets in prompts/logs/output; use a least-privilege workspace API key; rotate keys as appropriate.
 
 ## Known Risks and Mitigations
 
 Risk: MCP tools can send real messages, trigger flows/sequences, and affect live contacts.
-Mitigation: Resolve exact contact/audience/inbox IDs first, inspect `token_get`, and verify mutations with a follow-up read.
+Mitigation: Mutating tools return `CONFIRMATION_REQUIRED` first; the agent shows the proposal and repeats the call with `_confirm: true` only after explicit user approval. Resolve exact contact/audience/inbox IDs first, inspect `token_get`, and verify mutations with a follow-up read.
 
 Risk: `search_tools` + `call_tool` can reach non-default tools including destructive operations.
 Mitigation: Fetch the current resource first, verify the ID, and prefer read-only tokens unless a write is required.
@@ -42,8 +42,8 @@ Mitigation: Fetch the current resource first, verify the ID, and prefer read-onl
 Risk: Flow publishing can alter production automation behavior.
 Mitigation: Call `schemas_flow_spec` before generating specs and `flows_validate` before `flows_publish`.
 
-Risk: Credentials are passed through environment variables to the local MCP server.
-Mitigation: Use the host IDE/plugin secret configuration, avoid committing `mcp.json` with real values, and scope API keys to the minimum necessary permissions.
+Risk: An OAuth grant or API key gives the agent access to a live workspace.
+Mitigation: Prefer OAuth, which keeps tokens in the host client's credential store and can be revoked in Settings → Integrations → ChatbotX MCP. For stdio, use the host's secret configuration, never commit config with real keys, and scope API keys to the minimum necessary permissions.
 
 ## References
 
@@ -57,7 +57,7 @@ Output type(s): MCP tool calls, structured JSON API data, Markdown guidance.
 
 Output format: MCP tool results contain JSON/text content returned from ChatbotX API operations. Errors surface through MCP tool error responses or ChatbotX API status payloads.
 
-Other properties: Write tools mutate live workspace data and some trigger outbound messages to real users; there is no universal dry-run mode.
+Other properties: Write tools mutate live workspace data and some trigger outbound messages to real users. There is no universal dry-run mode; the confirmation step is the review point.
 
 ## Ethical Considerations
 

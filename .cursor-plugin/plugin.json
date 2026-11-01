@@ -1,6 +1,6 @@
 {
   "name": "chatbotx",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "ChatbotX agentic workspace automation via CLI and MCP tools for contacts, conversations, flows, broadcasts, sequences, analytics, and omnichannel messaging.",
   "author": {
     "name": "ChatbotXIO",
@@ -24,16 +24,5 @@
     "./skills/chatbotx",
     "./skills/chatbotx-mcp"
   ],
-  "mcpServers": "./.cursor-plugin/mcp.json",
-  "variables": {
-    "type": "object",
-    "properties": {
-      "CHATBOTX_API_KEY": {
-        "type": "string",
-        "title": "ChatbotX API key",
-        "description": "Workspace API key from ChatbotX Settings → Developer → API Keys."
-      }
-    },
-    "required": ["CHATBOTX_API_KEY"]
-  }
+  "mcpServers": "./.cursor-plugin/mcp.json"
 }

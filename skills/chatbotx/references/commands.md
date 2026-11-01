@@ -30,6 +30,8 @@ chatbotx contacts bulk-sequences --contactIds <contactIds> --sequenceIds <sequen
 chatbotx contacts tags list <identifier>
 chatbotx contacts tag add <identifier> --tagIds <tagIds>
 chatbotx contacts custom-fields update <identifier> --operations <operations>  # batch set/append/prepend/increase/decrease
+chatbotx contacts custom-field get <identifier> <idOrName>
+chatbotx contacts custom-field delete <identifier> <idOrName>  # clears one field
 chatbotx contacts notes list <identifier>
 chatbotx contacts note add <identifier> --text <text>
 chatbotx contacts sequences list <identifier>
@@ -103,8 +105,12 @@ chatbotx teams list / get / create / update / delete
 chatbotx teams member add <id> --userIds <userIds>
 chatbotx tags list / create / get / update / delete
 chatbotx custom-fields list / create / get / update / delete
-chatbotx bot-fields list / get / delete
-chatbotx bot-fields update --fields <fields>                 # JSON array of {id,value} or {name,value}
+chatbotx bot-fields list / get / create / delete
+chatbotx bot-fields edit <idOrName>                          # rename / change type [--name --type]
+chatbotx bot-fields set <idOrName> --value <value>           # set one value
+chatbotx bot-fields update --fields <fields>                 # set many: JSON array of {id,value} or {name,value}
+chatbotx bot-fields reset <idOrName>
+chatbotx bot-fields bulk-reset
 chatbotx folders list --folderType <tag|customField>          # [--parentId]
 chatbotx inboxes list
 chatbotx capabilities list                                     # [--include] discover ids/names an agent needs
@@ -123,6 +129,7 @@ chatbotx analytics contacts-by-dimension --dimension <country|channel|source>
 chatbotx analytics bot-messages-by-result              # [--granularity]
 chatbotx analytics broadcasts-stats <broadcastId>
 chatbotx analytics flows-stats <flowId>
+chatbotx analytics reset-flow-stats <flowId>             # destructive: clears the flow's stats
 chatbotx analytics sequences-steps-stats <sequenceId> <stepId>
 chatbotx analytics mac-active-count                     # no time range — current billing period
 ```
@@ -132,6 +139,7 @@ chatbotx analytics mac-active-count                     # no time range — curr
 ```bash
 chatbotx ai-agents list / get / create / update / delete
 chatbotx ai-files list / get / create / delete           # knowledge-base files [--file --url]
+chatbotx ai-files search / reindex / chunks list
 chatbotx ai-functions list / get / create / update / delete
 chatbotx ai-mcp-servers list / get / create / update / delete
 ```
@@ -141,16 +149,20 @@ chatbotx ai-mcp-servers list / get / create / update / delete
 ```bash
 chatbotx products list / get / create / update / delete
 chatbotx product-categories list / create / update / delete
-chatbotx coupon-topics list / get / create / update / archive / unarchive / delete
+chatbotx coupon-topics list / get / create / update / delete
+chatbotx coupon-topics archive add <id> / unarchive add <id>
 chatbotx coupon-topics issue add <id> --contactId <contactId>
 chatbotx coupons list
 chatbotx minigames list / get / create / update / delete / bulk-delete
 chatbotx minigames plays list <id> --contactId <contactId>
 chatbotx minigames players list <id>
-chatbotx questionnaires list / get / create / update / delete / duplicate
+chatbotx questionnaires list / get / create / update / delete
+chatbotx questionnaires duplicate add <id>
 chatbotx questionnaires submissions list <id>
 chatbotx appointment-calendars list / get / create / update / delete
-chatbotx appointments list / get / create / cancel / delete
+chatbotx appointment-calendars availability list <id>   # check free slots before booking
+chatbotx appointments list / get / create / delete
+chatbotx appointments cancel add <id>
 chatbotx ref-links list / get / create / update / delete
 chatbotx qr-codes list / get / create / update / delete
 ```
@@ -159,6 +171,7 @@ chatbotx qr-codes list / get / create / update / delete
 
 ```bash
 chatbotx integrations list / get
+chatbotx integrations find-by-ai <provider>                 # read only; connect/disconnect AI via the API
 chatbotx integrations status-token-errors
 chatbotx whatsapp templates                              # [--inboxId --integrationWhatsappId --status]
 chatbotx smtp-integrations list / get / create / update / delete
@@ -182,12 +195,15 @@ chatbotx media-library files-move --fileIds <fileIds>       # [--folderId]
 ## Ads
 
 ```bash
-chatbotx ads conversion-rules                              # list rules; create via same command, see command-name collisions in SKILL.md
+chatbotx ads conversion-rules                              # list rules
+chatbotx ads create-conversion-rule / update-conversion-rule <id> / delete-conversion-rule <id>
 chatbotx ads funnel / funnel-timeseries / analytics-overview / analytics-timeseries
 chatbotx ads capi-delivery
 chatbotx ads conversions-export                             # [--allChannels]
 chatbotx ads ad-accounts list <channel>
-chatbotx ads campaigns                                       # list/create messaging ad campaigns, see command-name collisions in SKILL.md
+chatbotx ads campaigns --channel <channel> --integrationId <integrationId>   # list messaging ads
+chatbotx ads campaigns-prerequisites / campaigns-ad-accounts / campaigns-messenger-pages
+chatbotx ads create-campaign --channel <channel> --integrationId <integrationId> --adAccountId <adAccountId>
 chatbotx ads campaigns-publish <id> / campaigns-pause <id> / campaigns-retry <id>
 chatbotx ads campaigns-insights                               # POST, adIds up to 500
 ```

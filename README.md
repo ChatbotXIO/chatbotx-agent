@@ -20,21 +20,36 @@ This repository intentionally excludes internal development skills.
 
 ## Prerequisites
 
-- A ChatbotX workspace API key (ChatbotX → Settings → Developer → API Keys). Prefer a read-only key
-  for discovery and analytics tasks.
-- A base API URL only for a self-hosted instance. SaaS defaults to `https://app.chatbotx.io/api`.
-- Node.js (the CLI documents Node 24+, the MCP server requires Node 18+).
+- A ChatbotX account that is an **owner or super admin** of the workspace you want to connect.
+  The hosted MCP server signs in with OAuth in the browser and binds the connection to the
+  workspace you pick on the consent screen. To switch workspaces, disconnect and connect again.
+- Only for the CLI or the local stdio MCP server: a workspace API key (ChatbotX → Settings →
+  Developer → API Keys; prefer a read-only key for discovery and analytics) and Node.js 24+.
+
+## MCP endpoints
+
+| Transport | URL | Use for |
+|---|---|---|
+| Streamable HTTP | `https://app.chatbotx.io/mcp/messages` | every modern MCP client (default in all manifests here) |
+| SSE (legacy) | `https://app.chatbotx.io/mcp/sse` | ChatGPT connectors and clients that only speak SSE |
+| stdio | `npx -y chatbotx-mcp` + `CHATBOTX_API_KEY` | self-hosted instances, CI, headless agents |
+
+Grants can be revoked in ChatbotX → Settings → Integrations → ChatbotX MCP.
 
 ## Install
 
-| Agent | Skills | MCP server |
-|---|---|---|
-| Claude Code | plugin (below) — installs both skills | started by the plugin; prompts only for the key |
-| Cursor | plugin (below) — installs both skills | started by the plugin; prompts only for the key |
-| Codex | `npx skills add ChatbotXIO/chatbotx-agent` → `.agents/skills/` | `~/.codex/config.toml` block below |
-| Windsurf, Gemini CLI, Copilot, others | `npx skills add ChatbotXIO/chatbotx-agent` | generic `mcp.json` block below |
-| Grok | `.grok-plugin/` manifest | included in the manifest |
-| Gemini CLI extension | — | `gemini-extension.json` |
+| Agent | Skills | MCP server | Sign in |
+|---|---|---|---|
+| Claude Code | plugin (below) | bundled in the plugin | `/mcp` → chatbotx → Authenticate |
+| Claude.ai / Claude Desktop | upload or `npx skills add` | Settings → Connectors → Add custom connector | browser |
+| ChatGPT | — | Settings → Connectors → custom connector, `…/mcp/sse` | browser |
+| Cursor | plugin (below) | bundled in the plugin | Cursor prompts on first use |
+| Codex | plugin (root `plugin.json`) or `npx skills add` | bundled, or `config.toml` below | `codex mcp login chatbotx` |
+| VS Code / GitHub Copilot | `npx skills add` | `.vscode/mcp.json` below | browser on first connect |
+| Gemini CLI | `npx skills add` | `gemini extensions install` (below) | `/mcp auth chatbotx` |
+| Windsurf | `npx skills add` | `mcp_config.json` below | Cascade prompts on first use |
+| OpenCode | `npx skills add` | `opencode.json` below | `opencode mcp auth chatbotx` |
+| Grok | `.grok-plugin/` manifest | bundled in the manifest | browser on first use |
 
 ### Skills (any agent that reads `SKILL.md`)
 
@@ -60,9 +75,110 @@ run `npm install -g chatbotx` on first use if the command is missing.
 /plugin install chatbotx@chatbotx-agent
 ```
 
-The plugin loads both skills and starts the ChatbotX MCP server. Claude Code asks only for the API
-key when the plugin is enabled (`userConfig`); the key is stored in secure storage. The server uses
-the SaaS URL by default. To use the MCP server without the plugin:
+The plugin loads both skills and connects to the hosted MCP server. Run `/mcp`, pick `chatbotx`,
+and authenticate in the browser. No API key is stored. Without the plugin:
+
+```bash
+claude mcp add chatbotx -t http -s user https://app.chatbotx.io/mcp/messages
+```
+
+### Claude.ai, Claude Desktop, ChatGPT
+
+Add a custom connector in the app's settings. Use `https://app.chatbotx.io/mcp/messages` for Claude
+and `https://app.chatbotx.io/mcp/sse` for ChatGPT. The app completes OAuth in the browser.
+
+### Cursor
+
+This repo ships a Cursor plugin at `.cursor-plugin/` (skills + hosted MCP server). Local install:
+
+```bash
+git clone https://github.com/ChatbotXIO/chatbotx-agent.git
+mkdir -p ~/.cursor/plugins/local
+ln -s "$(pwd)/chatbotx-agent" ~/.cursor/plugins/local/chatbotx
+```
+
+Restart Cursor or run **Developer: Reload Window**, then sign in when Cursor asks. MCP only, in
+`~/.cursor/mcp.json`:
+
+```json
+{ "mcpServers": { "chatbotx": { "url": "https://app.chatbotx.io/mcp/messages" } } }
+```
+
+### Codex
+
+The repository root is a portable plugin (`plugin.json`, `mcp.json`, `skills/`), and Codex also
+reads `.claude-plugin/marketplace.json`:
+
+```bash
+codex plugin marketplace add ChatbotXIO/chatbotx-agent
+```
+
+Or configure the server directly in `~/.codex/config.toml` and install the skills with
+`npx skills add`:
+
+```toml
+[mcp_servers.chatbotx]
+url = "https://app.chatbotx.io/mcp/messages"
+```
+
+```bash
+codex mcp login chatbotx
+```
+
+### VS Code / GitHub Copilot
+
+`.vscode/mcp.json` (or run `code --add-mcp '{"name":"chatbotx","type":"http","url":"https://app.chatbotx.io/mcp/messages"}'`):
+
+```json
+{ "servers": { "chatbotx": { "type": "http", "url": "https://app.chatbotx.io/mcp/messages" } } }
+```
+
+### Gemini CLI
+
+```bash
+gemini extensions install https://github.com/ChatbotXIO/chatbotx-agent
+```
+
+`gemini-extension.json` registers the server with `httpUrl` (Gemini treats `url` as SSE). Run
+`/mcp auth chatbotx` to sign in.
+
+### Windsurf
+
+`~/.codeium/windsurf/mcp_config.json`:
+
+```json
+{ "mcpServers": { "chatbotx": { "serverUrl": "https://app.chatbotx.io/mcp/messages" } } }
+```
+
+### OpenCode
+
+`opencode.json`:
+
+```json
+{ "mcp": { "chatbotx": { "type": "remote", "url": "https://app.chatbotx.io/mcp/messages" } } }
+```
+
+### Self-hosted, CI, or API key (stdio)
+
+Use the local server when the hosted endpoint is not an option: a self-hosted ChatbotX, a headless
+agent, or CI. It needs Node.js 24+ and a workspace API key. Replace the URL for a self-hosted
+instance (keep the `/api` suffix).
+
+```json
+{
+  "mcpServers": {
+    "chatbotx": {
+      "command": "npx",
+      "args": ["-y", "chatbotx-mcp"],
+      "env": {
+        "CHATBOTX_API_KEY": "<your-workspace-token>",
+        "CHATBOTX_API_URL": "https://app.chatbotx.io/api",
+        "CHATBOTX_MCP_TRANSPORT": "stdio"
+      }
+    }
+  }
+}
+```
 
 ```bash
 claude mcp add chatbotx \
@@ -71,53 +187,6 @@ claude mcp add chatbotx \
   -e CHATBOTX_MCP_TRANSPORT=stdio \
   -s user \
   -- npx -y chatbotx-mcp
-```
-
-### Cursor
-
-This repo ships a Cursor plugin at `.cursor-plugin/` (skills + MCP server + variables). Local install:
-
-```bash
-git clone https://github.com/ChatbotXIO/chatbotx-agent.git
-mkdir -p ~/.cursor/plugins/local
-ln -s "$(pwd)/chatbotx-agent" ~/.cursor/plugins/local/chatbotx
-```
-
-Restart Cursor or run **Developer: Reload Window**, then set `CHATBOTX_API_KEY` in the plugin
-configuration UI. For a self-hosted instance, replace the API URL in `.cursor-plugin/mcp.json`.
-
-### Codex
-
-```bash
-npx skills add ChatbotXIO/chatbotx-agent   # skills → .agents/skills/
-```
-
-Then add the MCP server to `~/.codex/config.toml`:
-
-```toml
-[mcp_servers.chatbotx]
-command = "npx"
-args = ["-y", "chatbotx-mcp"]
-env = { CHATBOTX_API_KEY = "<your-token>", CHATBOTX_API_URL = "https://app.chatbotx.io/api", CHATBOTX_MCP_TRANSPORT = "stdio" }
-```
-
-### Generic MCP clients (Windsurf, Gemini CLI, Copilot, ...)
-
-Install the skills with `npx skills add` as above, then register the stdio server. `mcp.json` at the
-repository root holds this block:
-
-```json
-{
-  "chatbotx": {
-    "command": "npx",
-    "args": ["-y", "chatbotx-mcp"],
-    "env": {
-      "CHATBOTX_API_KEY": "<your-workspace-token>",
-      "CHATBOTX_API_URL": "https://app.chatbotx.io/api",
-      "CHATBOTX_MCP_TRANSPORT": "stdio"
-    }
-  }
-}
 ```
 
 ### CLI only
@@ -134,11 +203,11 @@ chatbotx capabilities list
 skills/
   chatbotx/               CLI skill: SKILL.md, references/commands.md, skill-card.md
   chatbotx-mcp/           MCP skill: SKILL.md, skill-card.md
-.claude-plugin/           Claude Code plugin + marketplace (skills + mcpServers + userConfig)
+plugin.json, mcp.json     Portable Agent Plugins manifest + hosted MCP server (Codex and compatible hosts)
+.claude-plugin/           Claude Code plugin + marketplace (skills + hosted MCP server)
 .cursor-plugin/           Cursor plugin + marketplace + mcp.json
 .grok-plugin/             Grok plugin + marketplace + mcp.json
-gemini-extension.json     Gemini CLI extension (MCP server)
-mcp.json                  Generic stdio MCP config
+gemini-extension.json     Gemini CLI extension (hosted MCP server)
 upstream.json             Pinned chatbotx / chatbotx-mcp npm versions the skills are documented against
 scripts/upstream/         Upstream drift check (see "Keeping in sync with upstream" below)
 .github/workflows/        Scheduled drift check (upstream-drift.yml)
@@ -187,7 +256,7 @@ When the check finds drift, resolve it by:
 
 1. Updating the affected file(s) the report names.
 2. Bumping `upstream.json` (and the `version:` field in the affected skill's `SKILL.md`,
-   `.claude-plugin/plugin.json`, the `plugins[].version` fields in `.cursor-plugin/marketplace.json`
+   `.claude-plugin/plugin.json`, root `plugin.json`, the `plugins[].version` fields in `.cursor-plugin/marketplace.json`
    and `.grok-plugin/marketplace.json`, and `gemini-extension.json`) to the live npm version.
 3. Adding a `CHANGELOG.md` entry.
 4. Merging — the next scheduled run closes the drift issue automatically.
@@ -201,11 +270,11 @@ No publish step. Push this public repository; `npx skills add ChatbotXIO/chatbot
 ### ClawHub
 
 ```bash
-clawhub skill publish skills/chatbotx --version 1.1.1 --dry-run --json
-clawhub skill publish skills/chatbotx-mcp --version 1.1.1 --dry-run --json
+clawhub skill publish skills/chatbotx --version 1.2.0 --dry-run --json
+clawhub skill publish skills/chatbotx-mcp --version 1.2.0 --dry-run --json
 
-clawhub skill publish skills/chatbotx --version 1.1.1 --changelog "Default SaaS API URL; only prompt for the API key"
-clawhub skill publish skills/chatbotx-mcp --version 1.1.1 --changelog "Default SaaS API URL; only prompt for the API key"
+clawhub skill publish skills/chatbotx --version 1.2.0 --changelog "Hosted MCP server with OAuth by default; CLI 1.17 catalog"
+clawhub skill publish skills/chatbotx-mcp --version 1.2.0 --changelog "Hosted MCP server with OAuth by default; CLI 1.17 catalog"
 ```
 
 ### Cursor Marketplace
@@ -213,14 +282,17 @@ clawhub skill publish skills/chatbotx-mcp --version 1.1.1 --changelog "Default S
 Submit this repository at <https://cursor.com/marketplace/publish>. Cursor reads
 `.cursor-plugin/plugin.json`, `.cursor-plugin/marketplace.json`, and `.cursor-plugin/mcp.json`.
 
-### npm prerequisite
+### Before announcing a release
 
-Every manifest starts the server with `npx -y chatbotx-mcp`, so `chatbotx-mcp` must be published to
-npm before marketplace submission:
+Every manifest connects to the hosted server, so check it is up and advertises HTTPS metadata:
 
 ```bash
-npm view chatbotx-mcp version
+curl -si -X POST https://app.chatbotx.io/mcp/messages | grep -i www-authenticate
+curl -s https://app.chatbotx.io/.well-known/oauth-protected-resource/mcp/messages
 ```
+
+The stdio fallback still uses `npx -y chatbotx-mcp`; `npm view chatbotx-mcp version` should match
+`upstream.json`.
 
 ## Safety
 

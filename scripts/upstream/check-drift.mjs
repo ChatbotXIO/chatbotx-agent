@@ -141,7 +141,7 @@ export function parseCollisionsDoc(markdown) {
  * list of tool names per category row) put tool names in backticks there.
  * Prose lines elsewhere in the section (e.g. "permission (`read_only`/`full`)")
  * are deliberately skipped, since they name token permission values, not
- * tools. The two meta-tools are excluded since they are not part of the
+ * tools. The three meta-tools are excluded since they are not part of the
  * default-visible OpenAPI-derived set.
  */
 export function parseMcpDefaultTools(markdown) {
@@ -163,6 +163,7 @@ export function parseMcpDefaultTools(markdown) {
   const NON_TOOL_NAMES = new Set([
     "search_tools",
     "call_tool",
+    "get_guide",
     "read_only",
     "full",
   ]);
@@ -317,7 +318,7 @@ export function renderReport(diff, { surface }) {
     "1. Update the affected file(s) above to match the live surface.",
   );
   lines.push(
-    "2. Bump `upstream.json` (and the `version:` field in the affected skill's `SKILL.md`, `.claude-plugin/plugin.json`, the `plugins[].version` fields in `.cursor-plugin/marketplace.json` and `.grok-plugin/marketplace.json`, `gemini-extension.json`) to the live npm version.",
+    "2. Bump `upstream.json` (and the `version:` field in the affected skill's `SKILL.md`, `.claude-plugin/plugin.json`, root `plugin.json`, the `plugins[].version` fields in `.cursor-plugin/marketplace.json` and `.grok-plugin/marketplace.json`, `gemini-extension.json`) to the live npm version.",
   );
   lines.push("3. Add a `CHANGELOG.md` entry.");
   lines.push(
