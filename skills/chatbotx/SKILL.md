@@ -2,7 +2,7 @@
 name: chatbotx
 description: Manage contacts, conversations, broadcasts, flows, sequences, appointments, minigames, and every other ChatbotX workspace resource from the command line.
 allowed-tools: Bash(chatbotx:*)
-version: 1.1.1
+version: 1.2.0
 homepage: https://github.com/ChatbotXIO/chatbotx-agent/tree/main/skills/chatbotx
 emoji: "🤖"
 metadata:
@@ -21,7 +21,7 @@ metadata:
         description: ChatbotX workspace API key (ChatbotX Settings → Developer → API Keys).
       - name: CHATBOTX_API_URL
         required: true
-        description: Base API URL of the ChatbotX instance, e.g. https://app.chatbotx.io/api.
+        description: Base API URL of the ChatbotX instance, including /api (SaaS https://app.chatbotx.io/api). The CLI has no built-in default.
       - name: CHATBOTX_ALLOW_SELF_SIGNED_CERT
         required: false
         description: Set to "true" to skip TLS certificate validation, e.g. for a local/self-signed instance.
@@ -58,7 +58,7 @@ the authoritative reference and this document can lag behind it.
 
 ## Setup
 
-Requires Node.js 24 or newer. Documented against `chatbotx` 1.8 or newer.
+Requires Node.js 24 or newer. Documented against `chatbotx` 1.17 or newer.
 
 ```bash
 npm install -g chatbotx
@@ -165,31 +165,25 @@ group before calling `--help`; for most tasks the Workflow examples above are en
 | `ai-agents`, `ai-files`, `ai-functions`, `ai-mcp-servers` | AI agent configuration and knowledge base |
 | `products`, `product-categories`, `coupon-topics`, `coupons`, `minigames`, `questionnaires`, `appointment-calendars`, `appointments`, `ref-links`, `qr-codes` | commerce and engagement |
 | `integrations`, `whatsapp`, `smtp-integrations`, `spreadsheets`, `facebook-lead-ads`, `fb-comments`, `ig-comments`, `ig-stories`, `contact-scans`, `messenger-personas`, `messenger-channels`, `zalo-channels`, `webchats`, `user-persistent-menus`, `dynamic-images`, `email-topics`, `media-library` | integrations and channels |
-| `ads` | conversion-rules, funnel, analytics, capi-delivery, conversions-export, ad-accounts, campaigns |
+| `ads` | conversion rules (list/create/update/delete), funnel, analytics, capi-delivery, conversions-export, ad-accounts, campaigns (list/create/publish/pause/retry/insights) |
 | `error-logs`, `appointment-external-calendars`, `appointment-reminders` | misc |
 
 ## Command-name collisions
 
 Command names are derived from the API path and method alone. When two operations under one
 resource reduce to the same name, the CLI registers the first and skips the second. It prints
-`Warning: duplicate command name "..." — skipping` on stderr but still exits `0`. Verified cases:
+`Warning: duplicate command name "..." — skipping` on stderr on every run but still exits `0`.
+Known cases as of `chatbotx` 1.17:
 
-- `bot-fields update <idOrName> --value <value>` (single field) is unreachable. Use
-  `bot-fields update --fields <fields>`, which updates by id or name in batch.
-- `contacts custom-fields update <identifier> <idOrName> --value <value>` (single-field PUT) is
-  unreachable. Use `contacts custom-fields update <identifier> --operations '[{"customFieldId":"...","operation":"set","value":"..."}]'`
-  for a single field too.
-- `contacts custom-field delete <identifier>` clears every custom field on the contact, not one.
-  The per-field delete has no CLI command.
-- `integrations find-by-ai --provider <provider>` is GET only. Connecting or disconnecting an AI
-  provider has no CLI command; use the API directly.
-- `ads conversion-rules`, `ads find-by-conversion-rules`, `ads campaigns`,
-  `media-library folders`, `media-library find-by-folders`, `media-library files`, and
+- `media-library folders`, `media-library find-by-folders`, `media-library files`, and
   `media-library find-by-files` each have duplicated generated names. Only the first-registered
   operation is reachable.
-- `analytics flows-stats <flowId>`: GET (fetch) wins. The DELETE (reset stats) variant has no CLI
-  command.
 - `minigames update <id>`: only one of PUT (full replace) and PATCH (partial) is reachable.
+
+Older collisions on bot fields, contact custom fields, flow-stats reset, and ads conversion
+rules/campaigns are gone in 1.17: each operation now has its own command (see
+[`references/commands.md`](references/commands.md)). Connecting or disconnecting an AI provider
+integration still has no CLI command; use the API directly.
 
 When a documented action returns `404` or silently does nothing, assume a collision and call the
 workspace REST API directly instead of trying other flag combinations.
@@ -205,6 +199,8 @@ workspace REST API directly instead of trying other flag combinations.
 
 ## MCP alternative
 
-Agents in MCP-capable IDEs can use the `chatbotx-mcp` server instead of the CLI. It exposes the
-same workspace API as MCP tools, filtered by the token's scopes. Setup and the default tool list
-are in `skills/chatbotx-mcp/SKILL.md` of this repository.
+Agents in MCP-capable hosts can use the ChatbotX MCP server instead of the CLI. The hosted server
+at `https://app.chatbotx.io/mcp/messages` signs in with OAuth in the browser, so no API key is
+needed. It exposes the same workspace API as MCP tools, filtered by the token's scopes. Prefer the
+CLI for bulk work, scripts, and pipelines. Setup and the default tool list are in
+`skills/chatbotx-mcp/SKILL.md` of this repository.

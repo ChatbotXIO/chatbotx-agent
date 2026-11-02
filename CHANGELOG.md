@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+## 1.2.0
+
+- Plugins now connect to the hosted ChatbotX MCP server (`https://app.chatbotx.io/mcp/messages`,
+  Streamable HTTP) and sign in with OAuth in the browser. No API key prompt and no local Node.js.
+  The Claude Code `userConfig.api_key` and the Cursor `CHATBOTX_API_KEY` variable are removed.
+  Gemini uses `httpUrl`; Cursor's `mcp.json` now uses the `mcpServers` wrapper.
+- Added a portable root `plugin.json` + `mcp.json` (Agent Plugins schema) so Codex and compatible
+  hosts can install the repo as a plugin. The root `mcp.json` is no longer a stdio snippet.
+- The stdio server (`npx -y chatbotx-mcp` + API key, Node.js 24+) is documented as the fallback for
+  self-hosted instances, CI, and headless agents.
+- `chatbotx-mcp` skill: OAuth setup and workspace binding, the `CONFIRMATION_REQUIRED` /
+  `_confirm: true` approval flow, the `get_guide` meta-tool, and the Connections, Mini Apps, and
+  Pipelines default tools (52 total).
+- `chatbotx` skill: documented against CLI 1.17.1. Updated the renamed commands (`appointments
+  cancel add`, `coupon-topics archive add`, `questionnaires duplicate add`), the new bot-field,
+  contact custom-field, flow-stats reset, and ads conversion-rule/campaign commands, and trimmed
+  the collision list to the five that still exist.
+- README install table covers Claude Code, Claude.ai/Desktop, ChatGPT, Cursor, Codex, VS Code,
+  Gemini CLI, Windsurf, OpenCode, and Grok.
+- Claude plugin: added `privacyPolicyUrl`; `assets/logo.svg` no longer uses a `<style>` block, so
+  the plugin directory accepts it as an icon.
+
 - Added an upstream drift check (`scripts/upstream/`, `.github/workflows/upstream-drift.yml`,
   `upstream.json`): a daily job compares the live, published `chatbotx` CLI and the live
   `chatbotx-mcp` default tool set against the docs in `skills/`, and opens/closes a single

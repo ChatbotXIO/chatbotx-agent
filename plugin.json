@@ -1,0 +1,21 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "chatbotx",
+  "version": "1.2.0",
+  "description": "ChatbotX for AI agents: the chatbotx CLI skill, the ChatbotX MCP server, and the MCP usage skill for contacts, conversations, flows, broadcasts, sequences, and analytics.",
+  "author": {
+    "name": "ChatbotXIO",
+    "email": "support@chatbotx.io",
+    "url": "https://chatbotx.io"
+  },
+  "homepage": "https://chatbotx.io",
+  "repository": "https://github.com/ChatbotXIO/chatbotx-agent",
+  "license": "MIT-0",
+  "keywords": [
+    "chatbotx",
+    "mcp",
+    "cli",
+    "automation",
+    "ai-agent"
+  ]
+}

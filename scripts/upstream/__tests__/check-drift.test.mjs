@@ -145,10 +145,15 @@ describe("parseCollisionsDoc", () => {
     assert.deepEqual(parseCollisionsDoc(md), []);
   });
 
+  // collisions-live.stderr.txt is `npx chatbotx@<pinned> --help` stderr for
+  // the version pinned in upstream.json; refresh it when bumping the pin.
   test("matches every collision the live CLI warns about", () => {
     const result = parseCollisionsDoc(realCliSkillMd());
     const liveCollisions = [
-      ...readFileSync(join(__dirname, "fixtures", "help-root.stderr.txt"), "utf8")
+      ...readFileSync(
+        join(__dirname, "fixtures", "collisions-live.stderr.txt"),
+        "utf8",
+      )
         .matchAll(/duplicate command name "([^"]+)"/g),
     ]
       .map((match) => match[1])
@@ -182,24 +187,27 @@ describe("parseMcpDefaultTools", () => {
     assert.deepEqual(result, ["contacts_create", "contacts_get", "token_get"]);
   });
 
-  test("excludes the two meta-tools", () => {
+  test("excludes the three meta-tools", () => {
     const md = [
       "## Discovery tools",
       "| `search_tools` | x |",
       "| `call_tool` | x |",
+      "| `get_guide` | x |",
       "| `token_get` | x |",
       "## Scope and read-only behavior",
     ].join("\n");
     assert.deepEqual(parseMcpDefaultTools(md), ["token_get"]);
   });
 
-  test("parses the real MCP SKILL.md to exactly the 43 live default tools", () => {
+  test("parses the real MCP SKILL.md to exactly the 52 live default tools", () => {
     const tools = parseMcpDefaultTools(realMcpSkillMd());
-    assert.equal(tools.length, 43);
+    assert.equal(tools.length, 52);
     assert.ok(tools.includes("contacts_create"));
     assert.ok(tools.includes("flows_publish"));
     assert.ok(!tools.includes("read_only"));
     assert.ok(!tools.includes("full"));
+    assert.ok(tools.includes("pipelines_move_item"));
+    assert.ok(!tools.includes("get_guide"));
   });
 
   test("rejects missing MCP section boundaries", () => {

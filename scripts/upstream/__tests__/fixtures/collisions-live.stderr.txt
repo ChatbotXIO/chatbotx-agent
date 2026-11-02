@@ -1,0 +1,5 @@
+Warning: duplicate command name "media-library:folders" — skipping
+Warning: duplicate command name "media-library:find-by-folders" — skipping
+Warning: duplicate command name "media-library:files" — skipping
+Warning: duplicate command name "media-library:find-by-files" — skipping
+Warning: duplicate command name "minigames:update" — skipping
