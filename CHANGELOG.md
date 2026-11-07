@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added an Antigravity plugin: `.antigravity-plugin/plugin.json` (display name, logo, suggested
+  prompts) and a root `mcp_config.json` pointing at the hosted MCP server via `serverUrl`.
+  Install with `agy plugin install https://github.com/ChatbotXIO/chatbotx-agent`.
+
 ## 1.2.0
 
 - Plugins now connect to the hosted ChatbotX MCP server (`https://app.chatbotx.io/mcp/messages`,
