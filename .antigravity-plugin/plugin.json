@@ -1,0 +1,29 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "chatbotx",
+  "displayName": "ChatbotX",
+  "version": "1.2.0",
+  "description": "Manage contacts, conversations, flows, broadcasts, sequences, analytics, and omnichannel messaging in ChatbotX.",
+  "logo": "assets/logo.svg",
+  "suggestedPrompts": [
+    "Show new contact counts and blocked contacts per day for the last 7 days",
+    "List recent unassigned customer conversations and summarize open inquiries",
+    "List all published automation flows and their execution stats"
+  ],
+  "author": {
+    "name": "ChatbotX",
+    "email": "support@chatbotx.io",
+    "url": "https://chatbotx.io"
+  },
+  "homepage": "https://chatbotx.io",
+  "repository": "https://github.com/ChatbotXIO/chatbotx-agent",
+  "license": "MIT-0",
+  "keywords": [
+    "chatbotx",
+    "omnichannel",
+    "crm",
+    "marketing-automation",
+    "messaging",
+    "mcp"
+  ]
+}

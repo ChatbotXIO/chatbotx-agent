@@ -47,6 +47,7 @@ Grants can be revoked in ChatbotX → Settings → Integrations → ChatbotX MCP
 | Codex | plugin (root `plugin.json`) or `npx skills add` | bundled, or `config.toml` below | `codex mcp login chatbotx` |
 | VS Code / GitHub Copilot | `npx skills add` | `.vscode/mcp.json` below | browser on first connect |
 | Gemini CLI | `npx skills add` | `gemini extensions install` (below) | `/mcp auth chatbotx` |
+| Antigravity | plugin (`.antigravity-plugin/`) | bundled (root `mcp_config.json`) | browser on first use |
 | Windsurf | `npx skills add` | `mcp_config.json` below | Cascade prompts on first use |
 | OpenCode | `npx skills add` | `opencode.json` below | `opencode mcp auth chatbotx` |
 | Grok | `.grok-plugin/` manifest | bundled in the manifest | browser on first use |
@@ -142,6 +143,16 @@ gemini extensions install https://github.com/ChatbotXIO/chatbotx-agent
 `gemini-extension.json` registers the server with `httpUrl` (Gemini treats `url` as SSE). Run
 `/mcp auth chatbotx` to sign in.
 
+### Antigravity
+
+```bash
+agy plugin install https://github.com/ChatbotXIO/chatbotx-agent
+```
+
+Antigravity reads `.antigravity-plugin/plugin.json` (it takes precedence over the root `plugin.json`,
+which stays the Agent Plugins manifest for Codex), loads `skills/`, and registers the hosted server
+from the root `mcp_config.json` (`serverUrl`, Streamable HTTP).
+
 ### Windsurf
 
 `~/.codeium/windsurf/mcp_config.json`:
@@ -208,6 +219,8 @@ plugin.json, mcp.json     Portable Agent Plugins manifest + hosted MCP server (C
 .cursor-plugin/           Cursor plugin + marketplace + mcp.json
 .grok-plugin/             Grok plugin + marketplace + mcp.json
 gemini-extension.json     Gemini CLI extension (hosted MCP server)
+.antigravity-plugin/      Antigravity plugin manifest (uses root mcp_config.json + skills/)
+mcp_config.json           Antigravity hosted MCP server
 upstream.json             Pinned chatbotx / chatbotx-mcp npm versions the skills are documented against
 scripts/upstream/         Upstream drift check (see "Keeping in sync with upstream" below)
 .github/workflows/        Scheduled drift check (upstream-drift.yml)
@@ -257,7 +270,7 @@ When the check finds drift, resolve it by:
 1. Updating the affected file(s) the report names.
 2. Bumping `upstream.json` (and the `version:` field in the affected skill's `SKILL.md`,
    `.claude-plugin/plugin.json`, root `plugin.json`, the `plugins[].version` fields in `.cursor-plugin/marketplace.json`
-   and `.grok-plugin/marketplace.json`, and `gemini-extension.json`) to the live npm version.
+   and `.grok-plugin/marketplace.json`, `gemini-extension.json`, and `.antigravity-plugin/plugin.json`) to the live npm version.
 3. Adding a `CHANGELOG.md` entry.
 4. Merging — the next scheduled run closes the drift issue automatically.
 
