@@ -5,14 +5,14 @@
     "email": "support@chatbotx.io"
   },
   "metadata": {
-    "description": "ChatbotX CLI and MCP skills for agentic workspace automation",
-    "version": "1.2.0"
+    "description": "Operate a ChatbotX omnichannel chatbot workspace from your AI agent: contacts, conversations, flows, broadcasts, sequences, pipelines, and analytics.",
+    "version": "1.2.2"
   },
   "plugins": [
     {
       "name": "chatbotx",
-      "description": "ChatbotX CLI and MCP workflows for contacts, conversations, flows, broadcasts, sequences, analytics, and omnichannel messaging.",
-      "source": "./"
+      "description": "Operate a ChatbotX omnichannel chatbot workspace from your AI agent: contacts, conversations, flows, broadcasts, sequences, pipelines, and analytics.",
+      "source": "./plugins/chatbotx"
     }
   ]
 }

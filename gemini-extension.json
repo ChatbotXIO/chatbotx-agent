@@ -1,7 +1,7 @@
 {
   "name": "chatbotx",
-  "version": "1.2.0",
-  "description": "ChatbotX agentic workspace automation: manage contacts, conversations, flows, broadcasts, sequences, analytics, and omnichannel messaging through CLI and MCP tools.",
+  "version": "1.2.2",
+  "description": "Operate a ChatbotX omnichannel chatbot workspace from your AI agent: contacts, conversations, flows, broadcasts, sequences, pipelines, and analytics.",
   "mcpServers": {
     "chatbotx": {
       "httpUrl": "https://app.chatbotx.io/mcp/messages",

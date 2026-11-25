@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "chatbotx",
-  "version": "1.2.0",
-  "description": "ChatbotX for AI agents: the chatbotx CLI skill, the ChatbotX MCP server, and the MCP usage skill for contacts, conversations, flows, broadcasts, sequences, and analytics.",
+  "version": "1.2.2",
+  "description": "Operate a ChatbotX omnichannel chatbot workspace from your AI agent: contacts, conversations, flows, broadcasts, sequences, pipelines, and analytics.",
   "author": {
     "name": "ChatbotXIO",
     "email": "support@chatbotx.io",

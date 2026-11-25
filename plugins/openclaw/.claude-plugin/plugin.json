@@ -1,14 +1,14 @@
 {
   "name": "chatbotx",
-  "version": "1.2.0",
-  "description": "ChatbotX for AI agents: the chatbotx CLI skill, the ChatbotX MCP server, and the MCP usage skill for contacts, conversations, flows, broadcasts, sequences, and analytics.",
+  "displayName": "ChatbotX",
+  "version": "1.2.2",
+  "description": "Operate a ChatbotX omnichannel chatbot workspace from your AI agent: contacts, conversations, flows, broadcasts, sequences, pipelines, and analytics.",
   "author": {
     "name": "ChatbotXIO",
     "email": "support@chatbotx.io",
     "url": "https://chatbotx.io"
   },
   "homepage": "https://chatbotx.io",
-  "privacyPolicyUrl": "https://chatbotx.io/privacy",
   "repository": "https://github.com/ChatbotXIO/chatbotx-agent",
   "license": "MIT-0",
   "keywords": [
@@ -18,14 +18,11 @@
     "automation",
     "ai-agent"
   ],
-  "skills": [
-    "./skills/chatbotx",
-    "./skills/chatbotx-mcp"
-  ],
   "mcpServers": {
     "chatbotx": {
       "type": "http",
-      "url": "https://app.chatbotx.io/mcp/messages"
+      "url": "https://app.chatbotx.io/mcp/messages",
+      "auth": "oauth"
     }
   }
 }

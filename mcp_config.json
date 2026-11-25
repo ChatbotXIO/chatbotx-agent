@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "mcp": {
+    "chatbotx": {
       "serverUrl": "https://app.chatbotx.io/mcp/messages"
     }
   }

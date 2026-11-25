@@ -1,0 +1,61 @@
+name: Publish to ClawHub
+
+# Publishes every folder under skills/ to https://clawhub.ai/chatbotx through ClawHub's own
+# reusable workflow (docs/cli.md "GitHub Actions" in openclaw/clawhub).
+#
+# - Push to main that touches skills/: real publish. The reusable workflow skips a skill whose
+#   content already matches the registry and bumps the patch version of one that changed, so a
+#   push that changes nothing publishes nothing. ClawHub's version numbers therefore advance on
+#   their own and are not forced to equal the `version:` in SKILL.md or plugin.json.
+# - Pull request that touches skills/: dry run only. It resolves the publish plan without a token
+#   and without uploading, so a malformed SKILL.md fails the PR instead of the release.
+# - Manual run: pick `dry_run` to preview, or leave it off to catch up a missed publish.
+#
+# Setup (once): add a CLAWHUB_TOKEN repository secret. Create it on a machine where
+# `clawhub login` has been completed, then read it with `clawhub token`. Use a token created for
+# this purpose, never echo it, and rotate it with `clawhub logout && clawhub login`.
+#
+# Do not pass `categories` or `topics` here: ClawHub then suspends the unchanged-skill skip and
+# republishes both skills on every run. Set them once by hand with
+# `clawhub skill publish skills/<name> --owner chatbotx --categories ... --topics ...`.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "skills/**"
+      - ".github/workflows/clawhub-publish.yml"
+  pull_request:
+    paths:
+      - "skills/**"
+      - ".github/workflows/clawhub-publish.yml"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Resolve the publish plan without uploading anything"
+        type: boolean
+        default: false
+
+# Two runs publishing the same slug race on the registry's version check.
+concurrency:
+  group: clawhub-publish-${{ github.event_name == 'pull_request' && github.ref || 'main' }}
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  publish:
+    name: Publish skills
+    permissions:
+      contents: read
+      # Required by the reusable workflow to resolve its own source from the OIDC claims.
+      id-token: write
+    # Pinned to a commit, not a branch: this job receives CLAWHUB_TOKEN. Bump deliberately.
+    # 252a3f86… is openclaw/clawhub main as of 2026-11-23.
+    uses: openclaw/clawhub/.github/workflows/skill-publish.yml@252a3f86d05331ea5944ad7749165fafb282097e
+    with:
+      root: skills
+      owner: chatbotx
+      dry_run: ${{ github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == true) }}
+    secrets:
+      clawhub_token: ${{ secrets.CLAWHUB_TOKEN }}

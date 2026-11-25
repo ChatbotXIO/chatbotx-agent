@@ -1,0 +1,32 @@
+{
+  "name": "chatbotx",
+  "displayName": "ChatbotX",
+  "version": "1.2.2",
+  "description": "Operate a ChatbotX omnichannel chatbot workspace from your AI agent: contacts, conversations, flows, broadcasts, sequences, pipelines, and analytics.",
+  "author": {
+    "name": "ChatbotXIO",
+    "email": "support@chatbotx.io",
+    "url": "https://chatbotx.io"
+  },
+  "homepage": "https://chatbotx.io",
+  "repository": "https://github.com/ChatbotXIO/chatbotx-agent",
+  "license": "MIT-0",
+  "keywords": [
+    "chatbotx",
+    "mcp",
+    "cli",
+    "automation",
+    "ai-agent"
+  ],
+  "icon": "./.claude-plugin/icon.png",
+  "documentationUrl": "https://chatbotx.io/docs",
+  "supportUrl": "https://chatbotx.io/contact/",
+  "privacyPolicyUrl": "https://chatbotx.io/privacy/",
+  "termsOfServiceUrl": "https://chatbotx.io/terms/",
+  "mcpServers": {
+    "chatbotx": {
+      "type": "http",
+      "url": "https://app.chatbotx.io/mcp/claude"
+    }
+  }
+}

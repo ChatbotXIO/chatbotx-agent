@@ -199,9 +199,10 @@ describe("parseMcpDefaultTools", () => {
     assert.deepEqual(parseMcpDefaultTools(md), ["token_get"]);
   });
 
-  test("parses the real MCP SKILL.md to exactly the 52 live default tools", () => {
+  test("parses the real MCP SKILL.md to exactly the 53 live default tools", () => {
     const tools = parseMcpDefaultTools(realMcpSkillMd());
-    assert.equal(tools.length, 52);
+    assert.equal(tools.length, 53);
+    assert.ok(tools.includes("post_analytics_summary"));
     assert.ok(tools.includes("contacts_create"));
     assert.ok(tools.includes("flows_publish"));
     assert.ok(!tools.includes("read_only"));

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "chatbotx",
+  "version": "1.2.2",
+  "description": "Operate a ChatbotX omnichannel chatbot workspace from your AI agent: contacts, conversations, flows, broadcasts, sequences, pipelines, and analytics.",
+  "author": {
+    "name": "ChatbotXIO",
+    "email": "support@chatbotx.io",
+    "url": "https://chatbotx.io"
+  },
+  "homepage": "https://chatbotx.io",
+  "repository": "https://github.com/ChatbotXIO/chatbotx-agent",
+  "license": "MIT-0",
+  "keywords": [
+    "chatbotx",
+    "mcp",
+    "cli",
+    "automation",
+    "ai-agent"
+  ]
+}

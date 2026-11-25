@@ -1,0 +1,27 @@
+name: Claude plugin
+
+# plugins/chatbotx and plugins/openclaw are generated from skills/ and the root manifests by
+# scripts/claude-plugin/build.mjs and scripts/openclaw-plugin/build.mjs, and every manifest carries
+# the summary/description from scripts/manifest/brand.mjs. Fail the PR when any of them is stale:
+# run `npm run build:plugins` to regenerate.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm test
+      - run: npm run check:manifests
+      - run: npm run check:claude-plugin
+      - run: npm run check:openclaw-plugin

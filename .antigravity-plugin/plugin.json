@@ -2,8 +2,8 @@
   "$schema": "https://antigravity.google/schemas/v1/plugin.json",
   "name": "chatbotx",
   "displayName": "ChatbotX",
-  "version": "1.2.0",
-  "description": "Manage contacts, conversations, flows, broadcasts, sequences, analytics, and omnichannel messaging in ChatbotX.",
+  "version": "1.2.2",
+  "description": "Operate a ChatbotX omnichannel chatbot workspace from your AI agent: contacts, conversations, flows, broadcasts, sequences, pipelines, and analytics.",
   "logo": "assets/logo.svg",
   "suggestedPrompts": [
     "Show new contact counts and blocked contacts per day for the last 7 days",
