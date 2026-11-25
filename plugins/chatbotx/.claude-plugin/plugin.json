@@ -1,7 +1,7 @@
 {
   "name": "chatbotx",
   "displayName": "ChatbotX",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Operate a ChatbotX omnichannel chatbot workspace from your AI agent: contacts, conversations, flows, broadcasts, sequences, pipelines, and analytics.",
   "author": {
     "name": "ChatbotXIO",

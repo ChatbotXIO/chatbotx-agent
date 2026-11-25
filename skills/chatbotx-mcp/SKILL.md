@@ -1,7 +1,7 @@
 ---
 name: chatbotx-mcp
 description: "Use the ChatbotX MCP server's tools to operate a ChatbotX workspace (contacts, conversations, flows, broadcasts, sequences, pipelines, analytics, automation) from MCP-capable agents and IDEs. Use when the ChatbotX MCP server is connected and the user asks to read or change ChatbotX workspace data, or needs help signing in, choosing a workspace, or approving a CONFIRMATION_REQUIRED action."
-version: 1.2.2
+version: 1.2.3
 homepage: https://github.com/ChatbotXIO/chatbotx-agent/tree/main/skills/chatbotx-mcp
 emoji: "🔌"
 metadata:
