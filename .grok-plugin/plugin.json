@@ -1,6 +1,6 @@
 {
   "name": "chatbotx",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Operate a ChatbotX omnichannel chatbot workspace from your AI agent: contacts, conversations, flows, broadcasts, sequences, pipelines, and analytics.",
   "author": {
     "name": "ChatbotXIO",
@@ -24,8 +24,7 @@
   ],
   "mcpServers": {
     "chatbotx": {
-      "url": "https://app.chatbotx.io/mcp/messages",
-      "note": "Hosted ChatbotX MCP server. Sign in with OAuth in the browser on first use; no API key needed."
+      "url": "https://app.chatbotx.io/mcp/messages"
     }
   }
 }

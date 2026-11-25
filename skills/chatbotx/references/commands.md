@@ -206,6 +206,17 @@ chatbotx ads campaigns-prerequisites / campaigns-ad-accounts / campaigns-messeng
 chatbotx ads create-campaign --channel <channel> --integrationId <integrationId> --adAccountId <adAccountId>
 chatbotx ads campaigns-publish <id> / campaigns-pause <id> / campaigns-retry <id>
 chatbotx ads campaigns-insights                               # POST, adIds up to 500
+chatbotx ads campaigns-upload-image                           # create an image upload URL for a campaign
+chatbotx ads campaigns-upload-video / campaigns-videos-status  # upload a campaign video, then poll its status
+chatbotx ads find-by-campaigns <id>                           # DELETES the campaign/ad set/ad on Meta (misleading generated name)
+chatbotx ads find-by-campaigns-ad-accounts <adAccountId>      # ad account details
+chatbotx ads connections                                      # list messaging-ads connections
+chatbotx ads find-by-connections <channel> <integrationId>    # DISCONNECTS a messaging-ads connection (misleading generated name)
+chatbotx ads find-by-conversion-rules <id> / find-by-conversions <id>   # get one conversion rule / conversion event
+chatbotx ads custom-audiences                                 # list custom audiences
+chatbotx ads retarget-audiences                               # sync a retarget audience
+chatbotx ads referral-ads                                     # ads contacts recently came from [--search --limit]
+chatbotx ads referral-stats                                   # contacts and conversions per ad
 ```
 
 ## Misc

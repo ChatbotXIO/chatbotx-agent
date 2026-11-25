@@ -137,6 +137,7 @@ Current default categories:
 | Messages | `messages_list` |
 | Mini Apps | `mini_apps_list`, `mini_apps_create` |
 | Pipelines | `pipelines_list`, `pipelines_list_items`, `pipelines_create_item`, `pipelines_move_item` |
+| Posts | `post_analytics_summary` |
 | Sequences | `sequences_list`, `sequences_get`, `sequences_update` |
 
 Everything else is reachable through `search_tools` and `call_tool` when the token is authorized:

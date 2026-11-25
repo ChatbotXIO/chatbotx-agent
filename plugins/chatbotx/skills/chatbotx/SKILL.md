@@ -171,8 +171,12 @@ group before calling `--help`; for most tasks the Workflow examples above are en
 Command names are derived from the API path and method alone. When two operations under one
 resource reduce to the same name, the CLI registers the first and skips the second. It prints
 `Warning: duplicate command name "..." — skipping` on stderr on every run but still exits `0`.
-Known cases as of `chatbotx` 1.17:
+Known cases as of `chatbotx` 1.23:
 
+- `channel-posts find-by-management <id>`: two management operations share this name; only the
+  first-registered one is reachable.
+- `posts destinations-posting-schedule <id>`: only one of the read and update operations on a
+  destination's posting schedule is reachable.
 - `media-library folders`, `media-library find-by-folders`, `media-library files`, and
   `media-library find-by-files` each have duplicated generated names. Only the first-registered
   operation is reachable.

@@ -354,3 +354,12 @@ test("checkPlugin scans reference files and enforces requireOAuth", () => {
   const clean = makePlugin(FULL_PLUGIN);
   assert.deepEqual(codes(checkPlugin(clean, { requireOAuth: true })), ["mcp_auth_missing"]);
 });
+
+test("defaults the plugin directory to dist/openai, not the repository root", async () => {
+  const { DEFAULT_PLUGIN_DIR, resolvePluginDir } = await import("../check-manifest.mjs");
+  const { resolve } = await import("node:path");
+  const repoRoot = resolve(import.meta.dirname, "..", "..", "..");
+  assert.equal(DEFAULT_PLUGIN_DIR, resolve(repoRoot, "dist", "openai"));
+  assert.equal(resolvePluginDir(undefined), DEFAULT_PLUGIN_DIR);
+  assert.equal(resolvePluginDir("some/dir"), resolve("some/dir"));
+});

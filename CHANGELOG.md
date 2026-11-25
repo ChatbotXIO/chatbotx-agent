@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.2.2
+
+- Synced the docs with `chatbotx@1.23.0` and `chatbotx-mcp@1.23.0` (`upstream.json`). The CLI
+  catalog lists 13 more `ads` commands. Two of them have misleading generated names:
+  `ads find-by-campaigns <id>` deletes a campaign and `ads find-by-connections` disconnects one.
+  The CLI skill documents two new command-name collisions (`channel-posts find-by-management`,
+  `posts destinations-posting-schedule`). The MCP skill lists the new default tool
+  `post_analytics_summary`.
+- The OpenAI manifest now uses the same support, privacy and terms URLs as the Claude manifest
+  (`https://chatbotx.io/contact/`, `/privacy/`, `/terms/`).
+- `npm run check:openai-plugin` now checks the built package in `dist/openai` by default. Before,
+  it checked the repository root and reported false errors.
+- The Antigravity MCP server is now called `chatbotx` (was `mcp`), and the Grok manifest no longer
+  has the non-standard `note` key.
+
 ## OpenClaw plugin 1.2.1
 
 - Added an OpenClaw plugin package, `plugins/openclaw/`, published to ClawHub as the bundle plugin

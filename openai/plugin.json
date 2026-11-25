@@ -31,9 +31,9 @@
           "Write"
         ],
         "websiteURL": "https://chatbotx.io",
-        "supportURL": "https://chatbotx.io",
-        "privacyPolicyURL": "https://chatbotx.io/privacy",
-        "termsOfServiceURL": "https://chatbotx.io/terms",
+        "supportURL": "https://chatbotx.io/contact/",
+        "privacyPolicyURL": "https://chatbotx.io/privacy/",
+        "termsOfServiceURL": "https://chatbotx.io/terms/",
         "defaultPrompt": [
           "Show new contact counts per day for the last 7 days",
           "List unassigned conversations and summarize them",

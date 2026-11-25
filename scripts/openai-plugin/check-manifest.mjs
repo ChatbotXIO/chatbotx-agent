@@ -6,7 +6,8 @@
 // MCP scan, or review test cases. Run the server in ChatGPT developer mode for those.
 //
 // Usage: node scripts/openai-plugin/check-manifest.mjs [plugin-dir] [--strict] [--require-oauth]
-//        plugin-dir defaults to the repo root. --strict also fails on warnings.
+//        plugin-dir defaults to dist/openai (run `npm run build:openai-plugin` first).
+//        --strict also fails on warnings.
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, extname, join, relative, resolve } from "node:path";
@@ -27,6 +28,12 @@ import {
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const ROOT_MANIFEST = "plugin.json";
 const CODEX_MANIFEST = join(".codex-plugin", "plugin.json");
+export const DEFAULT_PLUGIN_DIR = join(REPO_ROOT, "dist", "openai");
+
+// Resolves the plugin directory from the CLI argument, falling back to the built package.
+export function resolvePluginDir(target) {
+  return resolve(target ?? DEFAULT_PLUGIN_DIR);
+}
 
 // Reads and parses a JSON file, turning failures into portal-style issues.
 export function readJson(path, codePrefix) {
@@ -174,7 +181,7 @@ function main(argv) {
   const strict = argv.includes("--strict");
   const requireOAuth = argv.includes("--require-oauth");
   const target = argv.find((arg) => !arg.startsWith("--"));
-  const pluginDir = resolve(target ?? REPO_ROOT);
+  const pluginDir = resolvePluginDir(target);
   const issues = checkPlugin(pluginDir, { requireOAuth });
   const errors = issues.filter((issue) => issue.level === "error").length;
   const warnings = issues.length - errors;

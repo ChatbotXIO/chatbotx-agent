@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Operate a ChatbotX omnichannel chatbot workspace from your AI agent: contacts, conversations, flows, broadcasts, sequences, pipelines, and analytics.",
-    "version": "1.2.1"
+    "version": "1.2.2"
   },
   "plugins": [
     {
