@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import {
   PORTABLE_FRONTMATTER_KEYS,
   buildOutputs,
+  toBundledServerSkill,
   toPortableSkill,
   validateSkill,
 } from "../build.mjs";
@@ -77,7 +78,9 @@ test("every generated file is its source in skills/ with portable frontmatter", 
   assert.ok([...outputs.keys()].filter((p) => p.endsWith("SKILL.md")).length >= 2);
   for (const [path, content] of outputs) {
     const source = readFileSync(join(SKILLS_DIR, path), "utf8");
-    const expected = path.endsWith("SKILL.md") ? toPortableSkill(source) : source;
+    const expected = path.endsWith("SKILL.md")
+      ? toBundledServerSkill(toPortableSkill(source))
+      : source;
     assert.equal(content, expected, path);
   }
 });
@@ -96,4 +99,18 @@ test("every generated SKILL.md uses only portable top-level frontmatter keys", (
 test("skill-card.md is not shipped", () => {
   const paths = [...buildOutputs().keys()];
   assert.ok(!paths.some((p) => p.endsWith("skill-card.md")));
+});
+
+test("plugin skills never tell the user to add an MCP server by hand", () => {
+  for (const [path, content] of buildOutputs()) {
+    assert.doesNotMatch(content, /claude mcp add|"command":\s*"npx"|mcp\/messages|mcp\/sse|stdio/i, path);
+  }
+});
+
+test("toBundledServerSkill swaps only the Setup and MCP alternative sections", () => {
+  const input = "name: chatbotx-mcp\n\n## Setup\n\nclaude mcp add x\n\n## Workflow\n\nkeep\n\n## MCP alternative\n\nold\n";
+  const out = toBundledServerSkill(input);
+  assert.match(out, /already declares the ChatbotX MCP server/);
+  assert.match(out, /## Workflow\n\nkeep/);
+  assert.doesNotMatch(out, /claude mcp add|\nold/);
 });

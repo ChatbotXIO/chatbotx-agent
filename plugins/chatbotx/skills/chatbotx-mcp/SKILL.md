@@ -10,58 +10,14 @@ Tools are generated from the workspace's OpenAPI spec and filtered by the token'
 
 ## Setup
 
-### Hosted server with OAuth (recommended)
-
-| Transport | URL |
-|---|---|
-| Streamable HTTP | `https://app.chatbotx.io/mcp/messages` |
-| SSE (legacy clients, ChatGPT connectors) | `https://app.chatbotx.io/mcp/sse` |
-
-No API key and no local Node.js. On first connect the client opens a browser:
+This plugin already declares the ChatbotX MCP server, so there is nothing to add or install.
+On first use the client opens a browser:
 
 1. Sign in to ChatbotX.
 2. Pick the workspace on the consent screen. Only workspace owners and super admins can authorize.
-3. Every token the client gets acts on that one workspace. To switch workspaces, disconnect the
-   server in the client and connect again.
+3. Every token acts on that one workspace. To switch workspaces, disconnect the server and connect again.
 
-Some clients need a login step after adding the server: Claude Code `/mcp`, Codex
-`codex mcp login chatbotx`, Gemini CLI `/mcp auth chatbotx`, OpenCode `opencode mcp auth chatbotx`.
-
-Claude Code:
-
-```bash
-claude mcp add chatbotx -t http -s user https://app.chatbotx.io/mcp/messages
-```
-
-Cursor and most JSON-configured clients (Windsurf names the key `serverUrl`; VS Code uses
-`"servers"` with `"type": "http"`):
-
-```json
-{ "mcpServers": { "chatbotx": { "url": "https://app.chatbotx.io/mcp/messages" } } }
-```
-
-### Local stdio server with an API key (self-hosted, CI, headless)
-
-Requires Node.js 24 or newer and a workspace API key from Settings → Developer → API Keys.
-
-```json
-{
-  "mcpServers": {
-    "chatbotx": {
-      "command": "npx",
-      "args": ["-y", "chatbotx-mcp"],
-      "env": {
-        "CHATBOTX_API_KEY": "your_workspace_token",
-        "CHATBOTX_API_URL": "https://app.chatbotx.io/api",
-        "CHATBOTX_MCP_TRANSPORT": "stdio"
-      }
-    }
-  }
-}
-```
-
-For a self-hosted instance, point `CHATBOTX_API_URL` at it (including `/api`). For a trusted
-self-signed certificate, also set `CHATBOTX_ALLOW_SELF_SIGNED_CERT=true`.
+If the tools are not connected yet, run `/mcp` in Claude Code and sign in to `chatbotx`.
 
 ## Workflow
 
@@ -184,6 +140,3 @@ connect to `https://app.chatbotx.io/mcp/claude`, a fixed tool set for that direc
 - Missing tools: call `token_get` to check scopes and permission, then refresh the MCP client so
   `tools/list` runs again.
 - New API not visible: the server refreshes the OpenAPI spec every 5 minutes.
-- stdio auth errors: verify `CHATBOTX_API_KEY` and that `CHATBOTX_API_URL` includes `/api`.
-- stdio TLS errors: set `CHATBOTX_ALLOW_SELF_SIGNED_CERT=true`, only for trusted local or
-  self-hosted instances.

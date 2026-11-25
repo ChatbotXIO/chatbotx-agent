@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.3
+
+- The Claude plugin copy of the skills no longer tells anyone to add an MCP server by hand. Its
+  `chatbotx-mcp` Setup section (`claude mcp add`, the `/mcp/messages` and `/mcp/sse` URLs, the local
+  `npx chatbotx-mcp` stdio server) and the `MCP alternative` sections are replaced with a note that
+  the plugin already declares the server. The Claude plugin directory rejects text that points at an
+  MCP server the plugin does not declare. `skills/` is unchanged.
+- The OpenClaw Claude manifest now carries the documentation, support, privacy and terms URLs.
+
 ## 1.2.2
 
 - The Claude plugin copy of the skills now keeps only `name`, `description` and `license`. The Claude

@@ -66,6 +66,10 @@ export function buildMarker(root) {
     repository: root.repository,
     license: root.license,
     keywords: root.keywords,
+    documentationUrl: "https://chatbotx.io/docs",
+    supportUrl: "https://chatbotx.io/contact/",
+    privacyPolicyUrl: "https://chatbotx.io/privacy/",
+    termsOfServiceUrl: "https://chatbotx.io/terms/",
     mcpServers: {
       chatbotx: { type: "http", url: MCP_URL, auth: "oauth" },
     },

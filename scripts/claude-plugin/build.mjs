@@ -1,6 +1,7 @@
 // Builds the Claude plugin directory (plugins/chatbotx/skills) from the canonical skills/ tree.
 //
-// Each skill's Markdown body is copied unchanged, so skills/ stays the only place to edit skills.
+// Each skill's Markdown body is copied as is, apart from the manual MCP setup sections (see
+// toBundledServerSkill), so skills/ stays the only place to edit skills.
 // The SKILL.md frontmatter keeps only name, description and license (claude.ai, Cowork and the
 // plugin directory reject or refuse other keys); ClawHub-only keys stay in skills/. ClawHub listing files (skill-card.md) are left out.
 //
@@ -28,6 +29,55 @@ const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/;
 const TOP_LEVEL_KEY = /^([A-Za-z][\w-]*):/;
 // skill-card.md is ClawHub listing copy, not something the agent loads.
 const EXCLUDED_FILES = new Set(["skill-card.md"]);
+
+// The plugin declares the ChatbotX MCP server itself (plugins/chatbotx/.claude-plugin/plugin.json),
+// so its skills must not tell anyone to add a server by hand: the directory review rejects text that
+// points at an MCP server the plugin does not declare (a `claude mcp add` URL, a local stdio server).
+const BUNDLED_SERVER_SECTIONS = new Map([
+  [
+    "Setup",
+    [
+      "## Setup",
+      "",
+      "This plugin already declares the ChatbotX MCP server, so there is nothing to add or install.",
+      "On first use the client opens a browser:",
+      "",
+      "1. Sign in to ChatbotX.",
+      "2. Pick the workspace on the consent screen. Only workspace owners and super admins can authorize.",
+      "3. Every token acts on that one workspace. To switch workspaces, disconnect the server and connect again.",
+      "",
+      "If the tools are not connected yet, run `/mcp` in Claude Code and sign in to `chatbotx`.",
+      "",
+      "",
+    ].join("\n"),
+  ],
+  [
+    "MCP alternative",
+    [
+      "## MCP alternative",
+      "",
+      "The ChatbotX MCP tools bundled with this plugin expose the same workspace API as the CLI,",
+      "signed in with OAuth in the browser, so no API key is needed. Prefer the CLI for bulk work,",
+      "scripts, and pipelines.",
+      "",
+      "",
+    ].join("\n"),
+  ],
+]);
+const STDIO_LINE = /^- stdio .*(?:\n {2}.*)*\n?/gm;
+
+// Replaces the manual-setup sections of a skill body with the bundled-server wording.
+// `Setup` is replaced only in the MCP skill: the CLI skill's Setup installs the `chatbotx` CLI.
+export function toBundledServerSkill(markdown) {
+  let out = markdown;
+  const isMcpSkill = /^name: chatbotx-mcp$/m.test(markdown);
+  for (const [heading, replacement] of BUNDLED_SERVER_SECTIONS) {
+    if (heading === "Setup" && !isMcpSkill) continue;
+    const section = new RegExp(`^## ${heading}\\r?\\n[\\s\\S]*?(?=^## |(?![\\s\\S]))`, "m");
+    out = out.replace(section, () => replacement);
+  }
+  return out.replace(STDIO_LINE, "");
+}
 
 // Returns the SKILL.md unchanged after checking it has the keys every host requires.
 export function validateSkill(markdown, sourceLabel = "SKILL.md") {
@@ -73,7 +123,7 @@ export function buildOutputs() {
     const relPath = relative(SOURCE_DIR, sourcePath);
     const content = readFileSync(sourcePath, "utf8");
     const isSkillFile = relPath.endsWith("SKILL.md");
-    outputs.set(relPath, isSkillFile ? toPortableSkill(content, `skills/${relPath}`) : content);
+    outputs.set(relPath, isSkillFile ? toBundledServerSkill(toPortableSkill(content, `skills/${relPath}`)) : content);
   }
   return outputs;
 }

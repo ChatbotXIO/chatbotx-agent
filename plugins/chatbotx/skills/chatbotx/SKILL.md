@@ -175,8 +175,7 @@ workspace REST API directly instead of trying other flag combinations.
 
 ## MCP alternative
 
-Agents in MCP-capable hosts can use the ChatbotX MCP server instead of the CLI. The hosted server
-at `https://app.chatbotx.io/mcp/messages` signs in with OAuth in the browser, so no API key is
-needed. It exposes the same workspace API as MCP tools, filtered by the token's scopes. Prefer the
-CLI for bulk work, scripts, and pipelines. Setup and the default tool list are in
-`skills/chatbotx-mcp/SKILL.md` of this repository.
+The ChatbotX MCP tools bundled with this plugin expose the same workspace API as the CLI,
+signed in with OAuth in the browser, so no API key is needed. Prefer the CLI for bulk work,
+scripts, and pipelines.
+
