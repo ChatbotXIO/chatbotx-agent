@@ -318,7 +318,7 @@ export function renderReport(diff, { surface }) {
     "1. Update the affected file(s) above to match the live surface.",
   );
   lines.push(
-    "2. Bump `upstream.json` (and the `version:` field in the affected skill's `SKILL.md`, `.claude-plugin/plugin.json`, root `plugin.json`, the `plugins[].version` fields in `.cursor-plugin/marketplace.json` and `.grok-plugin/marketplace.json`, `gemini-extension.json`) to the live npm version.",
+    "2. Bump `upstream.json` (and the `version:` field in the affected skill's `SKILL.md`, `plugins/chatbotx/.claude-plugin/plugin.json`, root `plugin.json`, the `plugins[].version` fields in `.cursor-plugin/marketplace.json` and `.grok-plugin/marketplace.json`, `gemini-extension.json`) to the live npm version.",
   );
   lines.push("3. Add a `CHANGELOG.md` entry.");
   lines.push(

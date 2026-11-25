@@ -1,0 +1,25 @@
+{
+  "name": "@chatbotx/chatbotx",
+  "displayName": "ChatbotX",
+  "version": "1.2.1",
+  "description": "Operate a ChatbotX omnichannel chatbot workspace from your AI agent: contacts, conversations, flows, broadcasts, sequences, pipelines, and analytics.",
+  "homepage": "https://chatbotx.io",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ChatbotXIO/chatbotx-agent.git",
+    "directory": "plugins/openclaw"
+  },
+  "license": "MIT-0",
+  "author": {
+    "name": "ChatbotXIO",
+    "email": "support@chatbotx.io",
+    "url": "https://chatbotx.io"
+  },
+  "keywords": [
+    "chatbotx",
+    "mcp",
+    "cli",
+    "automation",
+    "ai-agent"
+  ]
+}

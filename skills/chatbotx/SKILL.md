@@ -1,8 +1,9 @@
 ---
 name: chatbotx
-description: Manage contacts, conversations, broadcasts, flows, sequences, appointments, minigames, and every other ChatbotX workspace resource from the command line.
+description: "Operate a ChatbotX omnichannel chatbot workspace from the command line with the `chatbotx` CLI: contacts, conversations, broadcasts, flows, sequences, appointments, minigames, and every other workspace resource. Use when the user wants to list, create, update, send, or bulk-process ChatbotX data from a shell, script, or CI job, or asks about ChatbotX contacts, inbox, flows, or broadcasts while the ChatbotX MCP tools are not connected."
 allowed-tools: Bash(chatbotx:*)
-version: 1.2.0
+compatibility: "Needs a shell with the chatbotx CLI (Node.js 24+), such as Claude Code or Cowork. In Claude chat, use the ChatbotX MCP tools instead."
+version: 1.2.1
 homepage: https://github.com/ChatbotXIO/chatbotx-agent/tree/main/skills/chatbotx
 emoji: "🤖"
 metadata:

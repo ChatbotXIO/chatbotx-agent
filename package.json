@@ -5,7 +5,16 @@
     "node": ">=24"
   },
   "scripts": {
-    "test": "node --test scripts/upstream/__tests__/*.test.mjs",
-    "check:upstream": "node scripts/upstream/check-drift.mjs"
+    "test": "node --test scripts/upstream/__tests__/*.test.mjs scripts/claude-plugin/__tests__/*.test.mjs scripts/openai-plugin/__tests__/*.test.mjs scripts/manifest/__tests__/*.test.mjs scripts/openclaw-plugin/__tests__/*.test.mjs",
+    "check:upstream": "node scripts/upstream/check-drift.mjs",
+    "sync:manifests": "node scripts/manifest/sync.mjs",
+    "check:manifests": "node scripts/manifest/sync.mjs --check",
+    "build:claude-plugin": "node scripts/claude-plugin/build.mjs",
+    "check:claude-plugin": "node scripts/claude-plugin/build.mjs --check",
+    "build:openai-plugin": "node scripts/openai-plugin/build.mjs",
+    "check:openai-plugin": "node scripts/openai-plugin/check-manifest.mjs",
+    "build:openclaw-plugin": "node scripts/openclaw-plugin/build.mjs",
+    "check:openclaw-plugin": "node scripts/openclaw-plugin/build.mjs --check",
+    "build:plugins": "npm run sync:manifests && npm run build:claude-plugin && npm run build:openclaw-plugin && npm run build:openai-plugin"
   }
 }

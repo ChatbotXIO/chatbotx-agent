@@ -1,0 +1,48 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "chatbotx",
+  "version": "1.0.0",
+  "description": "Operate a ChatbotX omnichannel chatbot workspace from your AI agent: contacts, conversations, flows, broadcasts, sequences, pipelines, and analytics.",
+  "author": {
+    "name": "ChatbotXIO",
+    "email": "support@chatbotx.io",
+    "url": "https://chatbotx.io"
+  },
+  "homepage": "https://chatbotx.io",
+  "repository": "https://github.com/ChatbotXIO/chatbotx-agent",
+  "license": "MIT-0",
+  "keywords": [
+    "chatbotx",
+    "mcp",
+    "omnichannel",
+    "chatbot",
+    "crm"
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "ChatbotX",
+        "shortDescription": "Run your ChatbotX workspace",
+        "longDescription": "Connect ChatGPT to your ChatbotX workspace to look up contacts and conversations, review flows, broadcasts, sequences, and analytics, and carry out a small set of approved actions such as sending a message, tagging a contact, assigning a conversation, or moving a pipeline item. You sign in with ChatbotX and choose the workspace on the consent screen.",
+        "developerName": "ChatbotX",
+        "category": "Business & Operations",
+        "capabilities": [
+          "Read",
+          "Write"
+        ],
+        "websiteURL": "https://chatbotx.io",
+        "supportURL": "https://chatbotx.io",
+        "privacyPolicyURL": "https://chatbotx.io/privacy",
+        "termsOfServiceURL": "https://chatbotx.io/terms",
+        "defaultPrompt": [
+          "Show new contact counts per day for the last 7 days",
+          "List unassigned conversations and summarize them",
+          "Which broadcasts ran recently and how did they do?"
+        ],
+        "brandColor": "#1A56DB",
+        "logo": "./assets/icon.png",
+        "composerIcon": "./assets/icon.png"
+      }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 ---
 name: chatbotx-mcp
-description: Use ChatbotX MCP tools to operate contacts, conversations, flows, broadcasts, sequences, analytics, and workspace automation from agentic IDEs.
-version: 1.2.0
+description: "Use the ChatbotX MCP server's tools to operate a ChatbotX workspace (contacts, conversations, flows, broadcasts, sequences, pipelines, analytics, automation) from MCP-capable agents and IDEs. Use when the ChatbotX MCP server is connected and the user asks to read or change ChatbotX workspace data, or needs help signing in, choosing a workspace, or approving a CONFIRMATION_REQUIRED action."
+version: 1.2.1
 homepage: https://github.com/ChatbotXIO/chatbotx-agent/tree/main/skills/chatbotx-mcp
 emoji: "🔌"
 metadata:
@@ -85,7 +85,8 @@ self-signed certificate, also set `CHATBOTX_ALLOW_SELF_SIGNED_CERT=true`.
 3. Resolve ids. Most writes take ids, not display names. When a name matches more than one row,
    ask the user which one; do not pick the first.
 4. Use the default tools for common operations. For anything else, find the tool with
-   `search_tools` (an English "action + resource" query) and run it with `call_tool`.
+   `search_tools` (an English "action + resource" query) and run it with `call_tool`. The
+   [Claude connection](#claude-connection) has no `search_tools` or `call_tool`.
 5. When a write returns `CONFIRMATION_REQUIRED`, follow [Confirmation](#confirmation).
 6. Verify each write with the matching `get`, `list`, or message-history tool.
 
@@ -145,6 +146,19 @@ Everything else is reachable through `search_tools` and `call_tool` when the tok
 deletes, coupons, products, webhooks, saved replies, tag/trigger/inbox/custom-field management,
 connection lifecycle (disconnect, reconnect, verify), workspace members, and other less common
 operations.
+
+## Claude connection
+
+The ChatbotX plugin and connector for Claude (claude.ai, Claude Desktop, Cowork, Claude Code)
+connect to `https://app.chatbotx.io/mcp/claude`, a fixed tool set for that directory:
+
+- Every default tool above except the three Connections tools, plus `get_guide`.
+- No `search_tools` or `call_tool`. An operation outside the list (deletes, coupons, products,
+  webhooks, workspace members, connecting channels) is not available on this connection. Use the
+  `chatbotx` CLI or the ChatbotX app for it, and tell the user so instead of looking for a
+  workaround.
+- Every tool that changes data is marked destructive, so Claude asks before each one. The
+  `CONFIRMATION_REQUIRED` step still applies after that.
 
 ## Scope and read-only behavior
 
