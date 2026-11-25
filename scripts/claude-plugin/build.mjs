@@ -1,9 +1,8 @@
 // Builds the Claude plugin directory (plugins/chatbotx/skills) from the canonical skills/ tree.
 //
 // Each skill's Markdown body is copied unchanged, so skills/ stays the only place to edit skills.
-// The SKILL.md frontmatter keeps only the portable keys every Claude surface accepts (claude.ai and
-// Cowork reject any other top-level key); ClawHub-only keys (version, homepage, emoji) stay in
-// skills/. ClawHub listing files (skill-card.md) are left out.
+// The SKILL.md frontmatter keeps only name, description and license (claude.ai, Cowork and the
+// plugin directory reject or refuse other keys); ClawHub-only keys stay in skills/. ClawHub listing files (skill-card.md) are left out.
 //
 // It also copies the root portable manifest (plugin.json, mcp.json) and LICENSE, so hosts that read
 // .claude-plugin/marketplace.json as a portable plugin (Codex) still find the MCP server.
@@ -22,14 +21,9 @@ const OUTPUT_DIR = join(PLUGIN_DIR, "skills");
 const COPIED_ROOT_FILES = ["plugin.json", "mcp.json", "LICENSE"];
 const REQUIRED_FRONTMATTER_KEYS = ["name", "description"];
 // https://code.claude.com/docs/en/skills.md: the portable SKILL.md frontmatter.
-export const PORTABLE_FRONTMATTER_KEYS = new Set([
-  "name",
-  "description",
-  "license",
-  "compatibility",
-  "metadata",
-  "allowed-tools",
-]);
+// Kept to the minimum the Claude plugin directory accepts from unverified organizations: it refuses
+// `allowed-tools` beyond Read/Grep/Glob/LS, so that key (and the extras) stay in skills/ only.
+export const PORTABLE_FRONTMATTER_KEYS = new Set(["name", "description", "license"]);
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/;
 const TOP_LEVEL_KEY = /^([A-Za-z][\w-]*):/;
 // skill-card.md is ClawHub listing copy, not something the agent loads.

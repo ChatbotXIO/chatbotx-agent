@@ -1,18 +1,6 @@
 ---
 name: chatbotx-mcp
 description: "Use the ChatbotX MCP server's tools to operate a ChatbotX workspace (contacts, conversations, flows, broadcasts, sequences, pipelines, analytics, automation) from MCP-capable agents and IDEs. Use when the ChatbotX MCP server is connected and the user asks to read or change ChatbotX workspace data, or needs help signing in, choosing a workspace, or approving a CONFIRMATION_REQUIRED action."
-metadata:
-  openclaw:
-    envVars:
-      - name: CHATBOTX_API_KEY
-        required: false
-        description: Workspace API key (Settings → Developer → API Keys). Only for the local stdio server; the hosted server signs in with OAuth.
-      - name: CHATBOTX_API_URL
-        required: false
-        description: API URL including /api, only for the local stdio server. Defaults to https://app.chatbotx.io/api.
-      - name: CHATBOTX_ALLOW_SELF_SIGNED_CERT
-        required: false
-        description: Set to "true" only for trusted local/self-hosted instances with self-signed TLS.
 ---
 
 # ChatbotX MCP

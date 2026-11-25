@@ -2,6 +2,9 @@
 
 ## 1.2.2
 
+- The Claude plugin copy of the skills now keeps only `name`, `description` and `license`. The Claude
+  plugin directory refuses `allowed-tools: Bash(...)`, `compatibility` and `metadata` from
+  unverified organizations; `skills/` (ClawHub, OpenClaw) keeps them.
 - Synced the docs with `chatbotx@1.23.0` and `chatbotx-mcp@1.23.0` (`upstream.json`). The CLI
   catalog lists 13 more `ads` commands. Two of them have misleading generated names:
   `ads find-by-campaigns <id>` deletes a campaign and `ads find-by-connections` disconnects one.

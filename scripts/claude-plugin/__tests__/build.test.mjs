@@ -38,12 +38,13 @@ test("throws when description is missing", () => {
   assert.throws(() => validateSkill("---\nname: demo\n---\nbody\n"), /description/);
 });
 
-test("the plugin copy keeps only portable frontmatter keys and the body", () => {
+test("the plugin copy keeps only name/description/license and the body", () => {
   const input = [
     "---",
     "name: demo",
     'description: "Does things"',
     "allowed-tools: Bash(demo:*)",
+    "compatibility: needs a shell",
     "version: 1.0.0",
     "homepage: https://example.com",
     'emoji: "🤖"',
@@ -62,10 +63,6 @@ test("the plugin copy keeps only portable frontmatter keys and the body", () => 
       "---",
       "name: demo",
       'description: "Does things"',
-      "allowed-tools: Bash(demo:*)",
-      "metadata:",
-      "  openclaw:",
-      "    primaryEnv: X",
       "---",
       "# Body",
       "version: not frontmatter",
