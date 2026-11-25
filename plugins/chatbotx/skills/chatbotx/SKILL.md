@@ -1,32 +1,6 @@
 ---
 name: chatbotx
 description: "Operate a ChatbotX omnichannel chatbot workspace from the command line with the `chatbotx` CLI: contacts, conversations, broadcasts, flows, sequences, appointments, minigames, and every other workspace resource. Use when the user wants to list, create, update, send, or bulk-process ChatbotX data from a shell, script, or CI job, or asks about ChatbotX contacts, inbox, flows, or broadcasts while the ChatbotX MCP tools are not connected."
-allowed-tools: Bash(chatbotx:*)
-compatibility: "Needs a shell with the chatbotx CLI (Node.js 24+), such as Claude Code or Cowork. In Claude chat, use the ChatbotX MCP tools instead."
-metadata:
-  openclaw:
-    requires:
-      bins:
-        - chatbotx
-    os:
-      - macos
-      - linux
-      - windows
-    primaryEnv: CHATBOTX_API_KEY
-    envVars:
-      - name: CHATBOTX_API_KEY
-        required: true
-        description: ChatbotX workspace API key (ChatbotX Settings → Developer → API Keys).
-      - name: CHATBOTX_API_URL
-        required: true
-        description: Base API URL of the ChatbotX instance, including /api (SaaS https://app.chatbotx.io/api). The CLI has no built-in default.
-      - name: CHATBOTX_ALLOW_SELF_SIGNED_CERT
-        required: false
-        description: Set to "true" to skip TLS certificate validation, e.g. for a local/self-signed instance.
-    install:
-      - kind: node
-        package: chatbotx
-        bins: [chatbotx]
 ---
 
 # ChatbotX
