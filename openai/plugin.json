@@ -42,6 +42,56 @@
         "brandColor": "#1A56DB",
         "logo": "./assets/icon.png",
         "composerIcon": "./assets/icon.png"
+      },
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "Daily new contact counts",
+              "prompt": "Show new contact counts per day in my ChatbotX workspace for the last 7 days.",
+              "tools_triggered": "analytics_new_contact_counts_per_day",
+              "expected_behavior": "Calls analytics_new_contact_counts_per_day for the last 7 days and returns the count for each day from the connected workspace."
+            },
+            {
+              "description": "Summarize unassigned conversations",
+              "prompt": "List the unassigned conversations in ChatbotX and summarize what each customer is asking about.",
+              "tools_triggered": "conversations_list, messages_list",
+              "expected_behavior": "Calls conversations_list filtered to unassigned conversations, reads recent messages with messages_list, and returns a short summary per conversation."
+            },
+            {
+              "description": "Recent broadcast performance",
+              "prompt": "Which ChatbotX broadcasts ran recently and how did they perform?",
+              "tools_triggered": "broadcasts_list, analytics_broadcast_stats",
+              "expected_behavior": "Calls broadcasts_list to find recent broadcasts, then analytics_broadcast_stats, and reports the stats for each broadcast."
+            },
+            {
+              "description": "Tag a contact with confirmation",
+              "prompt": "Find the most recently created contact in ChatbotX and add the tag VIP to them.",
+              "tools_triggered": "contacts_list, contacts_add_tags_by_name",
+              "expected_behavior": "Resolves the contact id with contacts_list, calls contacts_add_tags_by_name, shows the proposed change when CONFIRMATION_REQUIRED is returned, and only applies it after the user approves."
+            },
+            {
+              "description": "Review pipeline items",
+              "prompt": "Show me the pipelines in my ChatbotX workspace and the items in each stage of the first one.",
+              "tools_triggered": "pipelines_list, pipelines_list_items",
+              "expected_behavior": "Calls pipelines_list, then pipelines_list_items for the first pipeline, and lists the items grouped by stage."
+            }
+          ],
+          "negative": [
+            {
+              "description": "Generic chatbot copywriting with no workspace data",
+              "prompt": "Write a friendly welcome message for a coffee shop's Facebook Messenger chatbot."
+            },
+            {
+              "description": "Request about a different CRM product",
+              "prompt": "Export all my HubSpot contacts to a CSV file."
+            },
+            {
+              "description": "General knowledge question about chatbots",
+              "prompt": "What is the difference between a rule-based chatbot and an AI chatbot?"
+            }
+          ]
+        }
       }
     }
   }
